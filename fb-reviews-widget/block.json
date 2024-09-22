@@ -1,0 +1,24 @@
+{
+    "$schema": "https://json.schemastore.org/block.json",
+    "apiVersion": "1",
+    "name": "fb-reviews-widget/reviews",
+    "title": "Trust Reviews Block",
+    "description": "Block for trust reviews. Easy way to show your Google, Facebook and Yelp reviews on WordPress pages!",
+    "category": "widgets",
+    "keywords": [
+        "trust",
+        "review",
+        "google",
+        "facebook",
+        "yelp",
+        "block"
+    ],
+    "icon": "star-filled",
+    "textdomain": "fb-reviews-widget",
+    "editorScript": "file:./build/index.js",
+    "attributes": {
+        "id": {
+            "type": "string"
+        }
+    }
+}
