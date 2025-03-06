@@ -396,15 +396,17 @@ $slg: trustreviews;
 .#{$slg} .#{$slg}-dots {
     position: absolute!important;
     left: 50%!important;
+    display: flex !important;
+    gap: 12px !important;
+    align-items: center !important;
     transform: translate(-50%, 0)!important;
     text-align: center!important;
 }
 
 .#{$slg} .#{$slg}-dot {
     display: inline-block!important;
-    width: 9px!important;
-    height: 9px!important;
-    margin: 3px!important;
+    width: 6px !important;
+    height: 6px !important;
     background: #cccccc!important;
     border-radius: 20px!important;
     cursor: pointer!important;
@@ -417,6 +419,8 @@ $slg: trustreviews;
 }
 
 .#{$slg} .#{$slg}-dot.active {
+    width: 8px !important;
+    height: 8px !important;
     opacity: 1!important;
     background: #427fed !important;
 }

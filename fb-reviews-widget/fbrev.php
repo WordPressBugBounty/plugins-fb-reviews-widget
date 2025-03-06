@@ -1,18 +1,13 @@
 <?php
 /*
-Plugin Name: Trust.Reviews
-Plugin Title: Trust.Reviews Plugin
+Plugin Name: Social Reviews & Recommendations
 Plugin URI: https://wordpress.org/plugins/fb-reviews-widget
 Description: Combines Facebook, Google and Yelp Reviews in widgets and shortcodes! Boost user confidence, number of customers and sales on site!
-Tags: facebook, google, yelp, reviews, ratings, facebook recommendations, google map reviews, testimonial, testimonials, slider
+Version: 2.4
 Author: Trust.reviews <support@trust.reviews>
 Author URI: https://trust.reviews
-Contributors: trustreviews
-License: GPLv2 or later
-Version: 2.3
 Text Domain: fb-reviews-widget
-Domain Path: /languages/
-Donate link: https://trust.reviews
+Domain Path: /languages
 */
 
 namespace WP_TrustReviews;

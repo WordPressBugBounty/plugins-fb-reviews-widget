@@ -115,7 +115,7 @@ class Builder_Page {
             <div id="{slg}-rate_us">
                 <div class="{slg}-rate_us-content">
                     <div class="{slg}-rate_us-head">
-                        How's experience with RichPlugins?
+                        How's experience with Trust.Reviews?
                     </div>
                     <div class="{slg}-rate_us-body">
                         Rate us clicking on the stars:

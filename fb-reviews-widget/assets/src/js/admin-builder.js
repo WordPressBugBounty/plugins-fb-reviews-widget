@@ -291,7 +291,7 @@ TrustReviews.Builder = function($, data) {
 
         '<div id="{slg}-connect-wizard" title="Easy steps to connect reviews" style="display:none;">' +
             '<div data-platform="google">' +
-                '<p>' +
+                /*'<p>' +
                     '<span>1</span> ' +
                     'Find your Google place on the map below (<u class="{slg}-wiz-arr">Enter a location</u>) and copy found <u><b>Place ID</b></u>' +
                 '</p>' +
@@ -300,7 +300,9 @@ TrustReviews.Builder = function($, data) {
                 '<p>' +
                     '<span>2</span> ' +
                     'Paste copied <u><b>Place ID</b></u> in this field and select language if needed' +
-                '</p>' +
+                '</p>' +*/
+                '<iframe id="grc" src="https://app.trustembed.com/grc?authcode={{authcode}}" style="width:100%;height:400px"></iframe>' +
+                '<small class="grw-connect-error"></small>' +
             '</div>' +
             '<div data-platform="other">' +
                 '<p>' +
@@ -311,13 +313,14 @@ TrustReviews.Builder = function($, data) {
                     '<span>2</span> ' +
                     'Copy & paste Yelp business URL to the field below' +
                 '</p>' +
+                '<p>' +
+                    '<input type="text" class="{slg}-connect-id" value="" placeholder="Yelp business link" />' + lang('Choose language if needed') +
+                '</p>' +
+                '<p>' +
+                    '<span>3</span> Click CONNECT REVIEWS button' +
+                '</p>' +
+                '<button class="{slg}-connect-btn">Connect Reviews</button>' +
             '</div>' +
-            '<p>' +
-                '<input type="text" class="{slg}-connect-id" value="" placeholder="Place ID" />' +
-                lang('Choose language if needed') +
-            '</p>' +
-            '<p><span>3</span> Click CONNECT REVIEWS button</p>' +
-            '<button class="{slg}-connect-btn">Connect Reviews</button>' +
             '<small class="{slg}-connect-error"></small>' +
         '</div>';
 
@@ -422,7 +425,8 @@ TrustReviews.Builder = function($, data) {
         $.post(ajaxurl, {
             id        : decodeURIComponent(params.id),
             lang      : params.lang,
-            local_img : params.local_img,
+            local_img : params.local_img || false,
+            token     : params.token,
             feed_id   : $('input[name="' + data.slg + '_feed[post_id]"]').val(),
             action    : data.slg + '_connect_' + platform,
             v         : new Date().getTime(),
@@ -431,14 +435,14 @@ TrustReviews.Builder = function($, data) {
 
             console.log('connect_debug:', res);
 
-            connect_btn[0].innerHTML = 'Connect ' + (platform.charAt(0).toUpperCase() + platform.slice(1));
-            connect_btn[0].disabled = false;
+            //connect_btn[0].innerHTML = 'Connect ' + (platform.charAt(0).toUpperCase() + platform.slice(1));
+            //connect_btn[0].disabled = false;
 
             var error_el = jq('.connect-error');
 
             if (res.status == 'success') {
 
-                error_el[0].innerHTML = '';
+                //error_el[0].innerHTML = '';
 
                 try { jq('#connect-wizard').dialog('close'); } catch (e) {}
 
@@ -950,7 +954,7 @@ TrustReviews.Builder = function($, data) {
             var OPTS_EL = document.querySelector(data.opt_el);
             if (!OPTS_EL) return;
 
-            OPTS_EL.innerHTML = HTML_CONTENT.replace(/{slg}/g, data.slg);
+            OPTS_EL.innerHTML = HTML_CONTENT.replace(/{slg}/g, data.slg).replace('{{authcode}}', data.authcode);
 
             if (data.conns && data.conns.connections && data.conns.connections.length) {
                 deserialize_connections(OPTS_EL, data);
@@ -963,6 +967,19 @@ TrustReviews.Builder = function($, data) {
                 $connect_wizard_el.attr('data-platform', platform);
                 $connect_wizard_el.dialog({modal: true, width: '50%', maxWidth: '600px'});
             });
+
+            // GRC
+            window.onmessage = function(e) {
+                if (e.origin !== 'https://app.trustembed.com') return;
+                if (e.data) {
+                    let data = e.data;
+                    switch (data.action) {
+                        case 'connect':
+                            connect_ajax(data, data.authcode, 1);
+                            break;
+                    }
+                }
+            };
 
             // Google & Yelp Connects
             connection(data.authcode);

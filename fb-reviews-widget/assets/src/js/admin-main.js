@@ -134,8 +134,9 @@ jQuery(document).ready(function($) {
                     type     : 'POST',
                     dataType : 'json',
                     data     : {
-                        rate   : rate,
-                        action : n('_rateus_ajax')
+                        rate     : rate,
+                        action   : n('_rateus_ajax'),
+                        _wpnonce : $('#_wpnonce').val()
                     },
                     success  : function(res) {
                         console.log(res);
@@ -166,10 +167,11 @@ jQuery(document).ready(function($) {
                 type     : 'POST',
                 dataType : 'json',
                 data     : {
-                    action : n('_rateus_ajax_feedback'),
-                    rate   : $rateus_stars.attr('data-rate'),
-                    email  : $('input', $rateus_dlg).val(),
-                    msg    : $('textarea', $rateus_dlg).val(),
+                    action   : n('_rateus_ajax_feedback'),
+                    rate     : $rateus_stars.attr('data-rate'),
+                    email    : $('input', $rateus_dlg).val(),
+                    msg      : $('textarea', $rateus_dlg).val(),
+                    _wpnonce : $('#_wpnonce').val()
                 },
                 success  : function(res) {
                     $rateus_dlg.dialog({'title': 'Feedback sent'})
@@ -229,7 +231,10 @@ jQuery(document).ready(function($) {
         });
 
         function ajax(pid, cb) {
-            var data = {action: n('_overview_ajax')};
+            var data = {
+                action   : n('_overview_ajax'),
+                _wpnonce : jQuery('#_wpnonce').val()
+            };
 
             if (pid) {
                 data.pid = pid;

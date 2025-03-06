@@ -660,12 +660,10 @@
     display: flex;
     flex-wrap: wrap;
   }
-
   .trustreviews-field-label {
     flex: 0 0 28%;
     padding-left: 2%;
   }
-
   .trustreviews-field-option {
     flex: 0 0 75%;
   }
@@ -709,23 +707,18 @@
   .trustreviews-flex-col {
     width: 50%;
   }
-
   .trustreviews-flex-col2 {
     width: 25%;
   }
-
   .trustreviews-flex-col3 {
     width: 30%;
   }
-
   .trustreviews-flex-col4 {
     width: 40%;
   }
-
   .trustreviews-flex-col6 {
     width: 60%;
   }
-
   .trustreviews-flex-col7 {
     width: 70%;
   }

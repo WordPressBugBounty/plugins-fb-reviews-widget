@@ -15,7 +15,7 @@ use WP_TrustReviews\Includes\Core\Database;
 
 final class Plugin {
 
-    const VER = '2.3';
+    const VER = '2.4';
     const SLG = 'trustreviews';
     const PFX = 'trustreviews_';
     const NAME = 'fb-reviews-widget';
@@ -27,7 +27,7 @@ final class Plugin {
     const FB_APP_URL = self::TR_APP_URL . '/fb';
     const FB_AUTH_URL = self::TR_APP_URL .  '/auth/fb';
 
-    const RP_APP_URL = 'https://app.richplugins.com';
+    const RP_APP_URL = self::TR_APP_URL;
     const G_APP_URL = self::RP_APP_URL . '/gpaw';
     const Y_APP_URL = self::RP_APP_URL . '/yarw';
 

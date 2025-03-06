@@ -81,14 +81,18 @@ class Connect_Google {
                 $id = sanitize_text_field(wp_unslash($_POST['id']));
                 $lang = sanitize_text_field(wp_unslash($_POST['lang']));
                 $local_img = sanitize_text_field(wp_unslash($_POST['local_img']));
+                $token = sanitize_text_field(wp_unslash($_POST['token']));
 
                 if ($google_api_key && strlen($google_api_key) > 0) {
                     $url = $this->api_url($id, $google_api_key, $lang);
                 } else {
-                    $url = Plugin::G_APP_URL . '/get/json' .
+                    $url = 'https://app.trustembed.com/grc/details/json?pid=' . $id . '&token=' . $token .
+                           '&siteurl=' . get_option('siteurl') . '&authcode=' . get_option(Plugin::SLG . '_auth_code');
+
+                    /*$url = Plugin::G_APP_URL . '/get/json' .
                            '?siteurl=' . get_option('siteurl') .
                            '&authcode=' . get_option(Plugin::SLG . '_auth_code') .
-                           '&pid=' . $id;
+                           '&pid=' . $id;*/
                     if ($lang && strlen($lang) > 0) {
                         $url = $url . '&lang=' . $lang;
                     }
@@ -110,7 +114,8 @@ class Connect_Google {
                     $result = array(
                         'id'      => $body_json->result->place_id,
                         'name'    => $body_json->result->name,
-                        'photo'   => strlen($body_json->result->business_photo) ? $body_json->result->business_photo : Plugin::G_BIZ_LOGO(),
+                        'photo'   => isset($body_json->result->business_photo) && strlen($body_json->result->business_photo)
+                                         ? $body_json->result->business_photo : Plugin::G_BIZ_LOGO(),
                         'reviews' => $body_json->result->reviews
                     );
                     $status = 'success';
@@ -146,11 +151,14 @@ class Connect_Google {
 
         } else {
 
-            $url = Plugin::G_APP_URL . '/update/json' .
+            $url = 'https://app.trustembed.com/grc/details/json?pid=' . $id . '&token=' . $token .
+                   '&siteurl=' . get_option('siteurl') . '&authcode=' . get_option(Plugin::SLG . '_auth_code') . '&time=' . time();
+
+            /*$url = Plugin::G_APP_URL . '/update/json' .
                    '?siteurl=' . get_option('siteurl') .
                    '&authcode=' . get_option(Plugin::SLG . '_auth_code') .
                    '&pid=' . $pid .
-                   '&time=' . time();
+                   '&time=' . time();*/
             if ($reviews_lang && strlen($reviews_lang) > 0) {
                 $url = $url . '&lang=' . $reviews_lang;
             }
@@ -247,9 +255,9 @@ class Connect_Google {
 
     function save_google_reviews($place, $local_img) {
         $place->pid = $place->place_id;
-        $place->photo = $place->business_photo;
+        $place->photo = isset($place->business_photo) ? $place->business_photo : Plugin::G_BIZ_LOGO();
         $place->review_count = $place->user_ratings_total;
-        $place->address = $place->formatted_address;
+        $place->address = isset($place->formatted_address) ? $place->formatted_address : '';
         foreach ($place->reviews as $review) {
             $review->author_img = $review->profile_photo_url;
         }

@@ -1,10 +1,10 @@
-=== Trust.Reviews ===
+=== Social Reviews & Recommendations ===
 Contributors: trust.reviews
 Donate link: https://trust.reviews/
-Tags: reviews, facebook, google, yelp, reviews, ratings, facebook recommendations, google map reviews, testimonial, testimonials, slider
+Tags: google reviews, facebook reviews, facebook recommendations, yelp reviews, ratings
 Requires at least: 3.0.1
-Tested up to: 6.6
-Stable tag: 2.3
+Tested up to: 6.7
+Stable tag: 2.4
 Requires PHP: 5.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -83,6 +83,12 @@ Please keep in mind that plugin requests Facebook permission <a href="https://de
 4. Facebook Reviews sidebar widget
 
 == Changelog ==
+
+= 2.4 =
+* Security fix: check nonce in rate us and overview controllers
+* Improve: possibility to connect up to 10 Google reviews
+* Update to WordPress 6.7
+* Some style fixes
 
 = 2.3 =
 * Improve: added own Yelp API key field on the Settings page
@@ -309,7 +315,7 @@ Please keep in mind that plugin requests Facebook permission <a href="https://de
 * Bugfix: cURL proxy fix
 * Bugfix: CURLOPT_FOLLOWLOCATION for curl used only with open_basedir and safe_mode disable
 * Improve: change permission from activate_plugins to manage_options for the plugin's settings
-* Improve: extract inline init script of widget to separate js file (rplg.js), common for rich plugins
+* Improve: extract inline init script of widget to separate js file (rplg.js), common for plugins
 * Tested up to WordPress 4.8
 * Added French language (fr_FR)
 * Added Colombia language (es_CO)

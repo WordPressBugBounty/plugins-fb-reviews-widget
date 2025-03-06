@@ -104,7 +104,7 @@ class View {
             </div>
             <?php } ?>
         </div>
-        <?php $this->js_loader('TrustReviews', 'Widget.init', '\'slider\'');
+        <?php $this->js_loader('TrustReviews', 'Plugin.init', '\'slider\'');
     }
 
     private function render_grid($businesses, $reviews, $options, $is_admin = false) {
@@ -158,7 +158,7 @@ class View {
             </div>
             <?php } ?>
         </div>
-        <?php $this->js_loader('TrustReviews', 'Widget.init', '\'grid\'');
+        <?php $this->js_loader('TrustReviews', 'Plugin.init', '\'grid\'');
     }
 
     private function render_list($businesses, $reviews, $options, $is_admin = false) {
@@ -181,7 +181,7 @@ class View {
             </div>
             <?php } ?>
         </div>
-        <?php $this->js_loader('TrustReviews', 'Widget.init');
+        <?php $this->js_loader('TrustReviews', 'Plugin.init');
     }
 
     function place($rating, $place, $place_img, $reviews, $options, $show_powered = true, $show_writereview = false) {
