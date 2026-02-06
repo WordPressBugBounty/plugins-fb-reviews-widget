@@ -309,13 +309,17 @@ $slg: trustreviews;
 }
 
 .#{$slg} .wp-review-hide {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
   color: #fff !important;
-  font-size: 12px !important;
+  font-size: 9px !important;
   font-weight: 600 !important;
-  line-height: 26px !important;
+  line-height: 12px !important;
   text-decoration: none !important;
   text-transform: uppercase !important;
-  padding: 2px 8px !important;
+  padding: 4px !important;
+  opacity: .85;
   border-radius: 3px !important;
   border-color: #0062cc !important;
   background-color: #427fbf !important;
@@ -377,6 +381,8 @@ $slg: trustreviews;
 }
 
 .#{$slg}-rate_us-body {
+  display: flex;
+  align-items: center;
   font-size: 18px;
 }
 
@@ -434,6 +440,15 @@ $slg: trustreviews;
 
 ##{$slg}-overview-rating {
   font-size: 15px;
+}
+
+##{$slg}-overview-rating .#{$slg}-rating {
+  color: #fb8e28 !important;
+  font-weight: 700 !important;
+}
+
+##{$slg}-overview-rating .#{$slg}-stars {
+  line-height: 12px;
 }
 
 ##{$slg}-overview-rating .wp-star svg {
@@ -517,6 +532,12 @@ $slg: trustreviews;
 .#{$slg}-shadow {
   border-radius: 10px;
   box-shadow: 0 4px 4px RGB(54 71 108 / 15%);
+}
+
+.#{$slg}-feedback span:first-child {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: sub !important;
 }
 
 /*-------------------------------- Settings page --------------------------------*/
@@ -855,6 +876,7 @@ $slg: trustreviews;
   cursor: pointer;
   text-align: center;
   background: #eee;
+  border-radius: 3px;
   text-transform: uppercase;
 }
 
@@ -1019,7 +1041,7 @@ img.#{$slg}-connect-photo {
   display: block;
 }
 
-##{$slg}-connect-wizard[data-platform="yelp"] [data-platform="other"] {
+##{$slg}-connect-wizard[data-platform="yelp"] [data-platform="yelp"] {
   display: block;
 }
 

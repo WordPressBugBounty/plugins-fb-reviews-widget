@@ -1,53 +1,133 @@
+/*-------------------------------- Reset CSS --------------------------------*/
+.trustreviews,
+.trustreviews *,
+.trustreviews *::before,
+.trustreviews *::after {
+  box-sizing: border-box;
+}
+
+.trustreviews {
+  display: block;
+  direction: ltr;
+  font-size: var(--font-size, 16px);
+  font-family: var(--font-family);
+  font-style: normal;
+  font-weight: normal;
+  text-align: start;
+  line-height: normal;
+  overflow: visible;
+  text-decoration: none;
+  list-style-type: disc;
+  box-sizing: border-box;
+  visibility: visible !important;
+}
+
+.trustreviews div,
+.trustreviews span {
+  margin: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  letter-spacing: normal;
+  text-transform: none;
+  text-decoration: none;
+  border: 0;
+  background: transparent;
+}
+
+.trustreviews a {
+  color: inherit;
+  text-decoration: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.trustreviews a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.trustreviews img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 0;
+  vertical-align: middle;
+}
+
+.trustreviews i {
+  font-style: normal;
+  font-weight: inherit;
+  line-height: 0;
+  vertical-align: middle;
+}
+
+.trustreviews svg {
+  display: inline-block;
+  width: auto;
+  height: auto;
+  vertical-align: middle;
+  overflow: visible;
+}
+
+.trustreviews svg use {
+  opacity: 1;
+  visibility: visible;
+}
+
+/*-------------------------------- Main CSS --------------------------------*/
+.trustreviews .trustreviews-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap, 2px);
+  flex-direction: var(--dir, column);
+  align-items: var(--align, star);
+  flex-wrap: var(--wrap, nowrap);
+  overflow: var(--overflow, visible);
+}
+
 .trustreviews .trustreviews-rating {
   color: #0866ff !important;
   font-size: 21px !important;
-  font-weight: 600 !important;
-  margin: 0 6px 0 0 !important;
+  font-weight: 700 !important;
   vertical-align: middle !important;
-}
-
-.trustreviews .trustreviews-stars svg {
-  display: inline-block !important;
-  width: 19px !important;
-  height: 19px !important;
-  padding: 0 4px 0 0 !important;
-  line-height: 22px !important;
-  vertical-align: middle !important;
-}
-
-.trustreviews .trustreviews-stars svg use {
-  fill: #0866ff;
-}
-
-.trustreviews [data-rev=google] .trustreviews-stars svg use {
-  fill: #fb8e28;
-}
-
-.trustreviews [data-rev=yelp] .trustreviews-stars svg use {
-  fill: #d80027;
+  line-height: normal !important;
 }
 
 .trustreviews .trustreviews-powered {
   color: #555 !important;
-  margin: 6px 0 0 !important;
 }
 
-.trustreviews .trustreviews-powered[data-platform=google] img {
+.trustreviews [data-platform=google] .trustreviews-powered img {
   max-width: 144px !important;
 }
 
-.trustreviews .trustreviews-powered[data-platform=yelp] img {
+.trustreviews [data-platform=yelp] .trustreviews-powered img {
   max-height: 25px !important;
   vertical-align: sub !important;
 }
 
-.trustreviews .trustreviews-powered[data-platform=facebook] span {
-  color: #0866FF !important;
+.trustreviews [data-platform=facebook] .trustreviews-powered span {
+  color: #0866ff !important;
   font-weight: 600 !important;
   opacity: 0.8 !important;
 }
 
+.trustreviews [data-platform=tripadvisor] .trustreviews-powered span {
+  color: #5ba672 !important;
+  font-weight: 600 !important;
+  opacity: 0.8 !important;
+}
+
+.trustreviews [data-rev=facebook],
+.trustreviews [data-platform=facebook] {
+  --rpi-star-color: #4569f5;
+}
+
 .trustreviews .trustreviews-list-review {
+  position: relative;
   margin-top: 15px !important;
 }
 
@@ -64,15 +144,18 @@
   padding-left: 10px !important;
 }
 
-.trustreviews .trustreviews-left img {
-  border: none !important;
-  float: left !important;
+.trustreviews .trustreviews-img {
+  min-width: 50px !important;
+  max-width: 50px !important;
   height: 50px !important;
-  width: 50px !important;
-  margin-right: 10px !important;
   overflow: hidden !important;
+  border: none !important;
   border-radius: 50% !important;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.24) !important;
+}
+
+.trustreviews [data-rev=google] .trustreviews-img {
+  overflow: visible !important;
 }
 
 .trustreviews .trustreviews-right {
@@ -89,28 +172,27 @@
   display: block !important;
 }
 
-.trustreviews .trustreviews-place.trustreviews-place-center .trustreviews-left img {
-  float: none !important;
-}
-
-.trustreviews .trustreviews-place .trustreviews-stars svg {
-  width: 20px !important;
-  height: 20px !important;
-  vertical-align: middle !important;
-}
-
 .trustreviews .trustreviews-name {
   color: black !important;
   font-size: 100% !important;
   font-weight: bold !important;
-  margin: 0 0 2px !important;
   padding-right: 6px !important;
   text-decoration: none !important;
+}
+
+.trustreviews .trustreviews-review .trustreviews-name {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .trustreviews a.trustreviews-name {
   color: #427fed !important;
   text-decoration: none !important;
+}
+
+.trustreviews .trustreviews-header .trustreviews-name {
+  font-size: 120% !important;
 }
 
 .trustreviews .trustreviews-time {
@@ -161,51 +243,27 @@
   color: #ececec !important;
 }
 
-.trustreviews.wpac .trustreviews-name {
-  font-size: 100% !important;
-}
-
-.trustreviews.wpac .trustreviews-hide {
-  display: none;
-}
-
-.trustreviews.wpac .trustreviews-name a {
-  color: #333 !important;
-  font-size: 100% !important;
-  text-decoration: none !important;
-}
-
-.trustreviews.wpac .trustreviews-left img {
-  width: 50px !important;
-  height: 50px !important;
-  border-radius: 50% !important;
-}
-
-.trustreviews.wpac a.trustreviews-name {
-  color: #154fc1 !important;
-  text-decoration: none !important;
-  white-space: nowrap !important;
-  text-overflow: ellipsis !important;
-}
-
-.trustreviews.wpac .trustreviews-list-review .trustreviews-stars {
-  display: inline-block;
-  margin-right: 4px !important;
-}
-
-.trustreviews.wpac.wp-dark .trustreviews-name a {
-  color: #eee !important;
-}
-
 .trustreviews-fb {
-  padding: 1px;
+  padding: 2px;
   width: 16px !important;
   height: 16px !important;
   border-radius: 50%;
   background: #0866ff !important;
 }
 
-/*-------------------------------- row --------------------------------*/
+.trustreviews-ta {
+  padding: 3px;
+  width: 16px !important;
+  height: 16px !important;
+  border-radius: 50%;
+  background: #00eb5b !important;
+}
+
+.trustreviews-feedback span:first-child {
+  margin-right: 8px;
+}
+
+/*-------------------------------- Row --------------------------------*/
 .trustreviews {
   display: block !important;
   width: 100% !important;
@@ -313,9 +371,12 @@
 
 .trustreviews .trustreviews-header-inner,
 .trustreviews .trustreviews-review-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   position: relative !important;
   margin: 0 10px !important;
-  padding: 15px !important;
+  padding: 16px !important;
   width: 100% !important;
 }
 
@@ -324,7 +385,7 @@
 }
 
 .trustreviews .trustreviews-review-inner.trustreviews-round {
-  border-radius: 4px !important;
+  border-radius: 12px !important;
 }
 
 .trustreviews .trustreviews-review-inner.trustreviews-shadow {
@@ -407,8 +468,8 @@
 
 .trustreviews .trustreviews-dot {
   display: inline-block !important;
-  width: 6px !important;
-  height: 6px !important;
+  width: 5px !important;
+  height: 5px !important;
   background: #cccccc !important;
   border-radius: 20px !important;
   cursor: pointer !important;
@@ -421,16 +482,16 @@
 }
 
 .trustreviews .trustreviews-dot.active {
-  width: 8px !important;
-  height: 8px !important;
+  width: 7px !important;
+  height: 7px !important;
   opacity: 1 !important;
-  background: #427fed !important;
+  background: #fb8e28 !important;
 }
 
-/*-------------------------------- slider overrides --------------------------------*/
+/*-------------------------------- Slider overrides --------------------------------*/
 .trustreviews .trustreviews-review .trustreviews-left {
   display: block !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   white-space: nowrap !important;
   text-overflow: ellipsis !important;
   line-height: 24px !important;
@@ -443,7 +504,6 @@
 .trustreviews .trustreviews-review .trustreviews-feedback {
   height: 100px !important;
   overflow-y: auto !important;
-  /*padding-right: 10px!important;*/
 }
 
 .trustreviews .trustreviews-review .trustreviews-feedback::-webkit-scrollbar {
@@ -467,14 +527,14 @@
   background: #ccc !important;
 }
 
-/*-------------------------------- writereview button --------------------------------*/
+/*-------------------------------- Writereview button --------------------------------*/
 .trustreviews .trustreviews-wr {
-  margin: 15px auto 8px !important;
+  display: flex;
 }
 
 .trustreviews .trustreviews-wr a {
   color: #fff !important;
-  padding: 6px 15px 10px !important;
+  padding: 4px 12px 8px !important;
   outline: none !important;
   border-radius: 27px !important;
   background: #0a6cff !important;
@@ -505,7 +565,7 @@
   border-radius: 50%;
 }
 
-/*-------------------------------- slider --------------------------------*/
+/*-------------------------------- Slider --------------------------------*/
 .trustreviews[data-layout=slider] .trustreviews-reviews {
   margin: 0 20px !important;
   padding: 10px 0 15px !important;
@@ -524,7 +584,7 @@
   transition: transform 0.5s !important;
 }
 
-/*-------------------------------- grid --------------------------------*/
+/*-------------------------------- Grid --------------------------------*/
 .trustreviews[data-layout=grid] .trustreviews-reviews {
   margin: 10px !important;
   padding: 0 !important;

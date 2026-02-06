@@ -42,20 +42,8 @@ TrustReviews.Plugin = {
     timeago: function() {
         let els = document.querySelectorAll('.' + TrustReviews.slg + ' [data-rev]');
         for (var i = 0; i < els.length; i++) {
-            let time,
-                rev = els[i].getAttribute('data-rev'),
-                tel = els[i].querySelector('[data-time]'),
-                dat = tel.getAttribute('data-time');
-
-            //if (rev == 'google') {
-                time = parseInt(dat);
-                time *= 1000;
-            /*} else if (rev == 'facebook') {
-                time = new Date(dat.replace(/\+\d+$/, '')).getTime();
-            } else {
-                time = new Date(dat.replace(/ /, 'T')).getTime();
-            }*/
-            tel.innerHTML = WPacTime.getTime(time, this.lang(), 'ago');
+            let el = els[i].querySelector('[data-time]');
+            el.innerHTML = rpi.Time.getTimeAgo(el.dataset.time, this.lang());
         }
     },
 

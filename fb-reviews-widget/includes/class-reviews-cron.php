@@ -80,7 +80,7 @@ class Reviews_Cron {
                         update_option(Plugin::SLG . '_feed_ids', implode(",", $ids));
 
                         // Clear feed cache
-                        delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $id . '_reviews', false);
+                        delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $id . '_reviews');
 
                         // Check execution time
                         $end_time = floor(microtime(true) * 1000) - $start_time;

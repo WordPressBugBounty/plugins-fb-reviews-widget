@@ -1,88 +1,231 @@
-=== Social Reviews & Recommendations ===
-Contributors: trust.reviews
-Donate link: https://trust.reviews/
-Tags: google reviews, facebook reviews, facebook recommendations, yelp reviews, ratings
-Requires at least: 3.0.1
-Tested up to: 6.7
-Stable tag: 2.4
+=== Reviews Widgets for Google, Yelp & TripAdvisor ===
+Contributors: widgetpack
+Tags: reviews, google reviews, facebook, tripadvisor, yelp reviews
 Requires PHP: 5.2
+Requires at least: 4.7
+Tested up to: 6.9
+Stable tag: 2.7.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Combines all Facebook Recommendations, Google and Yelp Reviews in widgets and shortcodes! Boost user confidence, number of customers and sales on site!
+Combine Facebook recommendations with Google, Yelp and TripAdvisor reviews in a widget, block or shortcode. Build a trusted website!
 
 == Description ==
 
-The plugin display **Facebook Reviews** and **Recommendations**, **Google** and **Yelp Reviews** merged or separated on your WordPress site in sidebar widgets or shortcodes. This plugin uses the official Facebook Graph API to show all reviews and requires an owner rights to the FB page. It displays up to 10 Google reviews and 3 Yelp reviews at the first install and can collect it daily to show more reviews.
+⭐ **Reviews Widgets for Google, Yelp & TripAdvisor** is a simple and powerful WordPress plugin that displays real customer reviews from major platforms (Google, Yelp & TripAdvisor) and **Facebook recommendations** into combined feed.
 
-Displaying **Facebook Rating**, **Google** and **Yelp Reviews** on your website is the easiest and most effective way to increase user trusts and, as a result, improve sales!
+---
 
-Feel free to try <a href="https://trust.reviews/">the Business version</a> to get more features!
+## ⭐ Unified feed — Google + Facebook + Yelp + TripAdvisor together!
 
-[youtube https://www.youtube.com/watch?v=TEqz4RDr7EI]
+📌 This plugin brings together reviews from **Facebook Recommendations**, **Google**, **Yelp**, and **TripAdvisor** into a single combined feed.
+📌 You no longer need separate plugins for each platform — everything is managed in one place using one widget, one shortcode and one settings panel.
+📌 This reduces setup time, avoids plugin conflicts and keeps your site lighter and easier to manage.
+
+---
+
+## ⭐ Unlimited business locations & unlimited widgets
+
+📍 **Unlimited locations** — connect any number of Google places, Yelp listings or Facebook Pages.
+🗂️ **Unlimited widgets** — each widget can use its own layout and source selection.
+🔧 Each widget can display a different location, different platform or any custom combination of Google, Yelp or Facebook sources.
+
+There are no limits on:
+- number of locations
+- number of widgets
+- number of shortcodes
+- number of pages where you display reviews
+
+---
+
+## ⭐ API usage & platform limitations
+
+This plugin uses the official Facebook Graph API to show **all recommendations** and requires an owner rights to the FB page. It displays up to **10 Google reviews** and **3 Yelp reviews** at the first install and can **collect it daily to show more reviews**.
+
+---
+
+## ⭐ Why display social reviews?
+
+📈 Build trust and credibility
+📌 Improve conversions
+📉 Reduce bounce rate
+⏱️ Increase dwell time
+🏆 Strengthen local business reputation
+🚀 Add verified social proof near your call-to-action
+
+This plugin gives you full control — show a few top reviews or an entire feed.
+
+---
+
+## ⭐ Manual filtering & moderation
+
+You have full manual control over what is displayed.
+If a review is irrelevant or not needed — hide it with one click.
+This helps maintain a clean and relevant feed.
+
+---
+
+## ⭐ Multiple display layouts
+
+Choose between:
+
+- List
+- Grid
+- Slider (carousel)
+
+Suitable for sidebars, landing pages, homepage sections, footers and full-width layouts.
+
+---
+
+## ⭐ SEO & performance benefits
+
+- Lightweight and optimized
+- Improves engagement
+- Clean HTML markup (SEO-friendly)
+- Compatible with caching plugins
+- Lazy-loading for images
+- Fully responsive on all screens
+
+---
+
+## ⭐ Sources & review limits
+
+- **Google** — up to 10 reviews via public API, more synced manually every 3 days using the “Refresh” option
+- **Yelp** — up to 3 reviews via public API, more synced manually every 3 days using the “Refresh” option
+- **Facebook** — all Recommendations available through the official Graph API (no limits)
+
+---
+
+== Features ==
+
+• Display Google reviews, Yelp reviews & Facebook Recommendations
+• Unified feed — combine all platforms into one widget
+• Unlimited business locations
+• Unlimited widgets and shortcodes
+• Multiple layouts: list, grid, slider (carousel)
+• Manual moderation (hide/show any review)
+• Responsive design
+• Manual refresh every 3 days
+• Pagination for long lists
+• SEO-friendly clean markup
+• Lazy-loading for images
+• Official APIs only — no scraping
+• Compatible with Elementor, Divi, Beaver Builder, SiteOrigin, WPBakery
+• Gutenberg block and classic widget included
+• Dark mode and light mode
+• Works immediately with no coding
+
+---
+
+== Demo ==
 
 [Online demo](https://trust.reviews/demos)
 
-= Plugin Features =
+[youtube https://www.youtube.com/watch?v=TEqz4RDr7EI]
 
-* Combines reviews from Google, Facebook and Yelp
-* Multiple widgets and shotcodes
-* SEO
-* Shortcode, widget and block support
-* Auto refresh reviews
-* Display ALL Facebook reviews
-* Shows "Based on ... reviews" section
-* Trim long reviews with "read more" link
-* Support page builders: Gutenberg, Elementor, SiteOrigin, Beaver Builder, WPBakery, Divi
-* Shows real reviews from Facebook users to increase user confidence
-* Easy get of Facebook pages and instantly show reviews
-* Review list theme
-* Pagination
-* Support dark websites
-* Nofollow, target="_blank" links
-* Fast cache (zero load time)
-
-= Get More Features with Business version! =
-
-[Upgrade to Business](https://trust.reviews/)
-
-* New awesome flash theme!
-* Merge reviews between each other from different platforms (Google, Facebook, Yelp) and places
-* Display all Google and Facebook reviews
-* Google Rich Snippets (schema.org)
-* Powerful <b>Collection Builder</b>
-* Slider/Grid themes to show G+ reviews like testimonials
-* Facebook Trust Badge (right/left float or embedded)
-* 'Write a review' button to available leave Google review directly on your website
-* Show/hide any elements (business, reviews, avatars, names, time and etc)
-* Any Sorting: recent, oldest, rating, striped
-* Include/Exclude words filter
-* Custom Facebook page photo
-* Minimum rating filter
-* Priority support
-
-= Additional Free Reviews Plugins =
-
-Why limit your reviews to just Facebook Reviews? Check out our other free reviews plugins to add to your site as well:
-
-* [Google Reviews Widget](https://wordpress.org/plugins/widget-google-reviews/ "Google Reviews Widget")
-* [Yelp Reviews Widget](https://wordpress.org/plugins/widget-yelp-reviews/ "Yelp Reviews Widget")
-
-Please keep in mind that plugin requests Facebook permission <a href="https://developers.facebook.com/docs/permissions/reference/pages_show_list" target="_blank">pages_show_list</a>, <a href="https://developers.facebook.com/docs/permissions/reference/pages_read_user_content" target="_blank">pages_read_user_content</a> and <a href="https://developers.facebook.com/docs/permissions/reference/pages_read_engagement" target="_blank">pages_read_engagement</a> to read your page reviews and show it in the widget.
+---
 
 == Installation ==
 
-1. Unpack archive to this archive to the 'wp-content/plugins/' directory inside of WordPress
-2. Activate the plugin through the 'Plugins' menu in WordPress
+1. Upload plugin files to `/wp-content/plugins/` or install via the Plugins screen.
+2. Activate **Reviews Widgets for Google, Yelp & TripAdvisor**.
+3. Go to **Social Reviews** in wp-admin.
+4. Connect your Google, Yelp and Facebook pages.
+5. Add the widget, shortcode or block anywhere.
+
+---
+
+== FAQ ==
+
+### ❓ How many reviews can I display?
+
+Google: up to 10, via public API.
+Yelp: up to 3, via public API.
+Facebook: all Recommendations for your own Pages.
+
+### ❓ Does the plugin use official APIs?
+
+Yes. Google and Yelp use public endpoints.
+Facebook requires login authorization and uses the official Graph API.
+
+### ❓ How many business locations can I connect?
+
+Unlimited — you can connect any number of locations.
+
+### ❓ How many widgets can I create?
+
+Unlimited — each widget can have its own layout and source combination.
+
+### ❓ Can I hide specific reviews manually?
+
+Yes. You can hide or show any review.
+
+### ❓ What layouts are supported?
+
+List, grid and slider (carousel).
+
+### ❓ Can I combine different platforms into one feed?
+
+Yes — Google + Yelp + Facebook in any combination.
+
+### ❓ Do I need a Facebook app?
+
+No. Simply authorize with your Facebook account.
+
+### ❓ Is JavaScript required?
+
+Only for “Read more”, slider and pagination.
+
+---
 
 == Screenshots ==
 
-1. Facebook Reviews widget
-2. Facebook Reviews shortcode
-3. Facebook Reviews shortcode builder
-4. Facebook Reviews sidebar widget
+1. Reviews widget example
+2. Shortcode example
+3. Shortcode builder
+4. Sidebar widget example
+
+---
 
 == Changelog ==
+
+= 2.7.3 =
+* Improved asset loading by adding version to file path URLs
+* Added option to disable inline CSS
+* Fixed incorrect inline CSS output
+* Fixed star icon conflicts
+
+= 2.7.2 =
+* Fixed Google rating and star icons
+
+= 2.7.1 =
+* Improved Facebook recommendation icons
+* Fixed Facebook rating and stars
+* Fixed "Rate Us" popup after first widget creation
+* UI and style enhancements
+
+= 2.7 =
+* Major rewrite of the plugin architecture
+* New Google reviews connection wizard
+* Added support for Facebook recommendations with platform icons
+* Improved and stabilized Yelp reviews integration
+* Added support for TripAdvisor reviews
+* Ability to combine reviews from multiple platforms into a single feed or separately
+* Fully redesigned reviews data structure with multilingual text support
+* Complete refactor of frontend styles
+* Performance improvements
+* Major bug fixes
+
+= 2.6 =
+* Updated star icons for better clarity and consistency
+* Added proper escaping on the Overview page.
+* Tested and updated for WordPress 6.9.
+* Minor style adjustments
+
+= 2.5 =
+* Security fixes (added escaping in overall views)
+* Bugfix: fixed Yelp reviews connector
+* Update to WordPress 6.8
 
 = 2.4 =
 * Security fix: check nonce in rate us and overview controllers

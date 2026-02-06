@@ -33,9 +33,13 @@ class Activator {
     }
 
     public function register() {
-        add_action('init', array($this, 'check_version'));
-        add_filter('https_ssl_verify', '__return_false');
-        add_filter('block_local_requests', '__return_false');
+        add_action('init', array($this, 'init'));
+    }
+
+    public function init() {
+        if (is_admin()) {
+            $this->check_version();
+        }
     }
 
     public function check_version() {
@@ -78,9 +82,11 @@ class Activator {
             update_option(Plugin::SLG . '_auth_code', $this->random_str(127));
             update_option(Plugin::SLG . '_revupd_cron', '1');
         } elseif ($last_active_version !== $current_version) {
-            $this->exist_install($current_version, $last_active_version);
-            update_option(Plugin::SLG . '_version', $current_version);
-            update_option(Plugin::SLG . '_revupd_cron', '1');
+            $this->exist_install($last_active_version);
+            if (get_option(Plugin::SLG . '_debug_mode') !== '1') {
+                update_option(Plugin::SLG . '_version', $current_version);
+                update_option(Plugin::SLG . '_revupd_cron', '1');
+            }
         }
     }
 
@@ -91,17 +97,78 @@ class Activator {
         add_option(Plugin::SLG . '_google_api_key', '');
     }
 
-    private function exist_install($current_version, $last_active_version) {
+    private function exist_install($last_active_version) {
         $this->update_db($last_active_version);
     }
 
     public function update_db($last_active_version) {
         global $wpdb;
 
-        switch($last_active_version) {
-            case version_compare($last_active_version, '2.0', '<'):
-                $this->first_install();
+        if (version_compare($last_active_version, '2.0', '<')) {
+            $this->first_install();
         }
+
+        if (version_compare($last_active_version, '2.7', '<')) {
+
+            $rev = $wpdb->prefix . Database::REVIEW_TABLE;
+            $biz = $wpdb->prefix . Database::BUSINESS_TABLE;
+
+            // add column map_url
+            $columns = $wpdb->get_col("SHOW COLUMNS FROM {$biz}", 0);
+            if (!in_array('map_url', $columns, true)) {
+                $wpdb->query("ALTER TABLE {$biz} ADD map_url VARCHAR(512)");
+            }
+
+            // add columns images, reply, reply_time
+            $columns = array_flip(
+                $wpdb->get_col("SHOW COLUMNS FROM {$rev}", 0)
+            );
+            foreach ([
+                'review_id'  => 'VARCHAR(64)',
+                'images'     => 'TEXT',
+                'reply'      => 'TEXT',
+                'reply_time' => 'INTEGER'
+            ] as $col => $type) {
+                if (!isset($columns[$col])) {
+                    $wpdb->query("ALTER TABLE {$rev} ADD {$col} {$type}");
+                }
+            }
+
+            // set default platform google
+            $wpdb->query("UPDATE {$rev} SET platform = 'google' WHERE platform IS NULL OR platform = ''");
+
+            // set review_id
+            $wpdb->query(
+                "UPDATE {$rev} r
+                 JOIN {$biz} b ON b.id = r.biz_id
+                 SET r.review_id = MD5(CONCAT(
+                     r.platform, ':', b.pid, ':',
+                     COALESCE(
+                         NULLIF(r.author_url, ''),
+                         CONCAT(COALESCE(NULLIF(r.author_name, ''), ''), ':', r.time)
+                     )
+                 ))
+                 WHERE r.review_id IS NULL OR r.review_id = ''"
+            );
+
+            $this->database->create_text_table();
+            $this->database->migrate_review_texts();
+        }
+
+        /*if (version_compare($last_active_version, '2.8', '<')) {
+
+            $rev = $wpdb->prefix . Database::REVIEW_TABLE;
+
+            // remove duplicates
+            $wpdb->query("DELETE r1 FROM {$rev} r1 INNER JOIN {$rev} r2 ON r1.platform = r2.platform AND r1.review_id = r2.review_id AND r1.id < r2.id");
+
+            // add index platform and review_id
+            $idx = Plugin::PFX . 'platform_review_idx';
+            $exists = $wpdb->get_var("SHOW INDEX FROM {$rev} WHERE Key_name = '{$idx}'");
+            if (!$exists) {
+                $wpdb->query("ALTER TABLE {$rev} ADD UNIQUE INDEX {$idx} (platform, review_id)");
+            }
+        }*/
     }
 
     /**
@@ -163,30 +230,32 @@ class Activator {
     /**
 	 * Delete all options of the plugin on a multisite
 	 */
-    public function delete_all_options($multisite = false) {
+    public function delete_all_options($multisite = false, $except = array()) {
         $network_wide = get_option(Plugin::SLG . '_is_multisite');
         if ($multisite && $network_wide) {
-            $this->delete_all_options_multisite();
+            $this->delete_all_options_multisite($except);
         } else {
-            $this->delete_all_options_single_site();
+            $this->delete_all_options_single_site($except);
         }
     }
 
-    private function delete_all_options_multisite() {
+    private function delete_all_options_multisite($except = array()) {
         global $wpdb;
 
         $site_ids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
 
         foreach($site_ids as $site_id) {
             switch_to_blog($site_id);
-            $this->delete_all_options_single_site();
+            $this->delete_all_options_single_site($except);
             restore_current_blog();
         }
     }
 
-    private function delete_all_options_single_site() {
+    private function delete_all_options_single_site($except = array()) {
         foreach ($this->options() as $opt) {
-            delete_option($opt);
+            if (!in_array($opt, $except)) {
+                delete_option($opt);
+            }
         }
     }
 

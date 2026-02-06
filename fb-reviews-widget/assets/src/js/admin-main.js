@@ -27,50 +27,121 @@ TrustReviews.Admin = {
     },
 
     star: function(prefix, color, size) {
-        return '' +
-        '<svg viewBox="0 0 1792 1792" width="' + size + '" height="' + size + '">' +
-            '<use xlink:href="#' + TRUSTREVIEWS_VARS.slg + '-star' + prefix + '" fill="' + color + '"/>' +
-        '</svg>';
+        let use;
+        switch (prefix) {
+            case '-half':
+                use = '<use href="#' + TRUSTREVIEWS_VARS.slg + '-star-o" style="stroke:' + color + ';stroke-width:1.5"/>' +
+                      '<use href="#' + TRUSTREVIEWS_VARS.slg + '-star-half" style="fill:' + color + '" clip-path="url(#' + TRUSTREVIEWS_VARS.slg + '-clip-half)"/>';
+                break;
+            case '-o':
+                use = '<use href="#' + TRUSTREVIEWS_VARS.slg + '-star-o" style="stroke:#ccc;stroke-width:1.5"/>';
+                break;
+            default:
+                use = '<use href="#' + TRUSTREVIEWS_VARS.slg + '-star" style="fill:' + color + '"/>';
+        }
+        return '<svg viewBox="0 0 24 24" width="' + size + '" height="' + size + '">' + use + '</svg>';
     },
 
     review: function(review) {
-        return '' +
-        ('<div class="{slg}-list-review' + (review.hide == '' ? '' : ' wp-review-hidden') + '" data-rev="' + review.provider + '">' +
-            '<div class="{slg}-right">' +
-                '<a href="' + review.author_url + '" class="{slg}-name" target="_blank" rel="nofollow noopener">' + review.author_name + '</a>' +
-                '<div class="{slg}-time" data-time="' + review.time + '"></div>' +
-                '<div class="{slg}-feedback">' +
-                    this.stars(review.rating, '#fb8e28', 16) +
-                    '<span class="{slg}-text">' + this.trimtext(review.text, 50) + '</span>' +
-                '</div>' +
-                '<a href="#" class="wp-review-hide" data-id="' + review.id + '">' + (review.hide == '' ? 'Hide' : 'Show') + ' review</a>' +
-            '</div>' +
-        '</div>').replace(/{slg}/g, TRUSTREVIEWS_VARS.slg);
+        const slg = TRUSTREVIEWS_VARS.slg;
+
+        const root = document.createElement('div');
+        root.className = slg + '-list-review' + (review.hide === '' ? '' : ' wp-review-hidden');
+        root.dataset.rev = String(review.provider || '');
+
+        const right = document.createElement('div');
+        right.className = slg + '-flex';
+        root.appendChild(right);
+
+        const lnk = document.createElement('a');
+        lnk.className = slg + '-name';
+        lnk.target = '_blank';
+        lnk.rel = 'nofollow noopener';
+        lnk.href = this.safeUrl(review.author_url);
+        lnk.textContent = review.author_name || '';
+        right.appendChild(lnk);
+
+        const time = document.createElement('div');
+        time.className = slg + '-time';
+        time.dataset.time = String(review.time || '');
+        right.appendChild(time);
+
+        const feedback = document.createElement('div');
+        feedback.className = slg + '-feedback';
+        right.appendChild(feedback);
+
+        const stars = document.createElement('span');
+        stars.className = 'rpi-stars';
+        stars.setAttribute('style', '--rpi-fill-percent:' + (review.rating * 20) + '%;--rpi-star-size:16px;vertical-align:middle!important');
+        feedback.appendChild(stars);
+
+        const text = document.createElement('span');
+        text.className = slg + '-text';
+        this.trimtext(text, review.text || '', 50);
+        feedback.appendChild(text);
+
+        const toggle = document.createElement('a');
+        toggle.href = '#';
+        toggle.className = 'wp-review-hide';
+        toggle.dataset.id = String(review.id || '');
+        toggle.textContent = (review.hide === '' ? 'Hide' : 'Show') + ' review';
+        right.appendChild(toggle);
+
+        return root;
     },
 
-    trimtext: function(text, size) {
-        if (size && text && text.length > size) {
-            var subtext = text.substring(0, size),
-                idx = subtext.indexOf(' ') + 1;
+    trimtext: function(el, text, size) {
+        if (!text) return;
+
+        text = String(text);
+
+        if (size && text.length > size) {
+            var subtext = text.substring(0, size);
+            var idx = subtext.indexOf(' ') + 1;
 
             if (idx < 1 || size - idx > (size / 2)) {
                 idx = size;
             }
 
-            var visibletext = '', invisibletext = '';
+            var visibletext = '';
+            var invisibletext = '';
+
             if (idx > 0) {
                 visibletext = text.substring(0, idx - 1);
-                invisibletext = text.substring(idx - 1, text.length);
+                invisibletext = text.substring(idx - 1);
+            } else {
+                visibletext = text;
             }
 
-            return visibletext +
-                   (invisibletext ?
-                   '<span>... </span>' +
-                   '<span class="wp-more">' + invisibletext + '</span>' +
-                   '<span class="wp-more-toggle">read more</span>' : '');
+            el.appendChild(document.createTextNode(visibletext));
+
+            if (invisibletext) {
+                var dots = document.createElement('span');
+                dots.textContent = '... ';
+                el.appendChild(dots);
+
+                var more = document.createElement('span');
+                more.className = 'wp-more';
+                more.textContent = invisibletext;
+                el.appendChild(more);
+
+                var toggle = document.createElement('span');
+                toggle.className = 'wp-more-toggle';
+                toggle.textContent = 'read more';
+                el.appendChild(toggle);
+            }
         } else {
-            return text;
+            el.textContent = text;
         }
+    },
+
+    safeUrl: function(url) {
+        if (!url) return '#';
+        url = String(url).trim();
+        if (/^https?:\/\//i.test(url)) {
+            return url;
+        }
+        return '#';
     },
 
     s2dmy: function(s) {
@@ -126,7 +197,7 @@ jQuery(document).ready(function($) {
         if (window.location.href.indexOf('_feed_id=') > -1 && !window[slg + '_rateus']) {
             $rateus.addClass(n('-flash-visible'));
         }
-        $('svg', $rateus).click(function() {
+        $('i', $rateus).click(function() {
             var rate = $(this).index() + 1;
             if (rate > 3) {
                 $.post({
@@ -330,30 +401,33 @@ jQuery(document).ready(function($) {
                      */
                     $rating.html(
                         ('<div class="{slg}">' +
-                            '<div class="{slg}-overview-h">' + place.name + '</div>' +
-                            '<div>' +
-                                '<span class="{slg}-rating">' + res.rating + '</span>' +
-                                '<span class="{slg}-stars">' + TrustReviews.Admin.stars(res.rating, '#fb8e28', 20) + '</span>' +
+                            '<div class="{slg}-flex" style="--dir:column;--gap:8px;--align:center">' +
+                                '<div class="{slg}-overview-h">' + place.name + '</div>' +
+                                '<div class="{slg}-flex" style="--dir:row;--align:center">' +
+                                    '<span class="{slg}-rating">' + res.rating + '</span>' +
+                                    '<span class="rpi-stars" style="--rpi-fill-percent:' + (res.rating * 20) + '%"></span>' +
+                                '</div>' +
+                                '<div class="{slg}-powered">Based on ' + res.review_count + ' reviews</div>' +
+                                (place.updated ?
+                                '<div class="{slg}-powered">Last updated: ' +
+                                    '<span class="{slg}-time">' +
+                                        rpi.Time.getTimeAgo(parseInt(place.updated), TrustReviews.Plugin.lang()) +
+                                    '</span>' +
+                                '</div>' : '') +
                             '</div>' +
-                            '<div class="{slg}-powered">Based on ' + res.review_count + ' reviews</div>' +
-
-                            (place.updated ?
-                            '<div class="{slg}-powered">Last updated: ' +
-                                '<span class="{slg}-time">' +
-                                    WPacTime.getTime(parseInt(place.updated), TrustReviews.Plugin.lang(), 'ago') +
-                                '</span>' +
-                            '</div>' : '') +
                         '</div>').replace(/{slg}/g, slg)
                     );
 
                     /*
                      * Render reviews
                      */
-                    var list = '';
+                    const list = document.createElement('div');
+                    list.className = slg + ' wpac';
                     $.each(res.reviews, function(i, review) {
-                        list += TrustReviews.Admin.review(review);
+                        list.appendChild(TrustReviews.Admin.review(review));
                     });
-                    $reviews.html('<div class="' + slg + ' wpac">' + list + '</div>');
+                    $reviews.html('');
+                    $reviews[0].appendChild(list);
                     TrustReviews.Plugin.timeago();
                     TrustReviews.Plugin.read_more();
 

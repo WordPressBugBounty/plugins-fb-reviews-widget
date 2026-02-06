@@ -119,7 +119,7 @@ class Builder_Page {
                     </div>
                     <div class="{slg}-rate_us-body">
                         Rate us clicking on the stars:
-                        <?php $this->view->stars(5); ?>
+                        <span class="rpi-star" style="--rpi-star-size:26px;--gap:0"><i></i><i></i><i></i><i></i><i></i></span>
                     </div>
                 </div>
             </div>
@@ -164,6 +164,7 @@ class Builder_Page {
                     window.TrustReviews.Builder($, {
                         slg        : '<?php echo Plugin::SLG; ?>',
                         opt_el     : '#{slg}-builder-option',
+                        lang       : '<?php echo get_locale(); ?>',
                         authcode   : '<?php echo get_option(Plugin::SLG . '_auth_code'); ?>',
                         fbAppUrl   : '<?php echo Plugin::FB_APP_URL; ?>',
                         fbAuthUrl  : '<?php echo Plugin::FB_AUTH_URL; ?>',

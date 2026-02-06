@@ -30,6 +30,8 @@ class Plugin_Settings {
         $yelp_api_key    = get_option(Plugin::SLG . '_yelp_api_key');
         $activation_time = get_option(Plugin::SLG . '_activation_time');
         $debug_mode      = get_option(Plugin::SLG . '_debug_mode') == '1';
+        $inlinecss_off   = get_option(Plugin::SLG . '_inlinecss_off');
+        $debug_display   = $debug_mode ? 'flex' : 'none';
 
         $revupd_cron     = get_option(Plugin::SLG . '_revupd_cron') == '1';
 
@@ -53,13 +55,29 @@ class Plugin_Settings {
 
                 <div id="{slg}-general" class="tab-content" style="display:<?php echo $tab == 'active' ? 'block' : 'none'?>;">
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=' . Plugin::SLG . '_settings_save&' . Plugin::SLG . '_tab=active&active=' . (string)((int)($enabled != true)))); ?>">
+                        <?php wp_nonce_field(Plugin::SLG . '-wpnonce_active', Plugin::SLG . '-form_nonce_active'); ?>
                         <div class="{slg}-field">
                             <div class="{slg}-field-label">
                                 <label>Trust Reviews plugin is currently <b><?php echo $enabled ? 'enabled' : 'disabled' ?></b></label>
                             </div>
                             <div class="wp-review-field-option">
-                                <?php wp_nonce_field(Plugin::SLG . '-wpnonce_active', Plugin::SLG . '-form_nonce_active'); ?>
                                 <input type="submit" name="active" class="button" value="<?php echo $enabled ? 'Disable' : 'Enable'; ?>" />
+                            </div>
+                        </div>
+                        <div class="{slg}-field">
+                            <div class="{slg}-field-label">
+                                <label>Disable inline CSS</label>
+                            </div>
+                            <div class="wp-review-field-option">
+                                <label>
+                                    <input type="hidden" name="inlinecss_off" value="false">
+                                    <input type="checkbox" id="inlinecss_off" name="inlinecss_off" value="true" <?php checked('true', $inlinecss_off); ?>>
+                                    Do not output the plugin’s inline CSS styles.<br>
+                                    <b>Do not turn on this</b> to ensure the latest styles and avoid caching issues after updates.
+                                </label>
+                                <div style="padding-top:15px">
+                                    <input type="submit" value="Save" name="save" class="button" />
+                                </div>
                             </div>
                         </div>
                     </form>
@@ -172,16 +190,7 @@ class Plugin_Settings {
                                 <p id="{slg}_debug_msg"></p>
                             </div>
                         </div>
-                        <div class="{slg}-field" style="display:none">
-                            <div class="{slg}-field-label">
-                                <label>Debug mode is currently <b><?php echo $debug_mode ? 'enabled' : 'disabled' ?></b></label>
-                            </div>
-                            <div class="wp-review-field-option">
-                                <?php wp_nonce_field(Plugin::SLG . '-wpnonce_debug_mode', Plugin::SLG . '-form_nonce_debug_mode'); ?>
-                                <input type="submit" name="debug_mode" class="button" value="<?php echo $debug_mode ? 'Disable' : 'Enable'; ?>" />
-                            </div>
-                        </div>
-                        <div class="{slg}-field" style="display:none">
+                        <div class="{slg}-field" style="display:<?php echo $debug_display; ?>">
                             <div class="{slg}-field-label">
                                 <label>Execute db update manually</label>
                             </div>
@@ -189,6 +198,15 @@ class Plugin_Settings {
                                 <?php wp_nonce_field(Plugin::SLG . '-wpnonce_update_db', Plugin::SLG . '-form_nonce_update_db'); ?>
                                 <input type="submit" name="update_db" class="button" />
                                 <input type="text" name="update_db_ver" style="width:94px;height:22px" placeholder="version" />
+                            </div>
+                        </div>
+                        <div class="{slg}-field" style="display:<?php echo $debug_display; ?>">
+                            <div class="{slg}-field-label">
+                                <label>Debug mode is currently <b><?php echo $debug_mode ? 'enabled' : 'disabled' ?></b></label>
+                            </div>
+                            <div class="wp-review-field-option">
+                                <?php wp_nonce_field(Plugin::SLG . '-wpnonce_debug_mode', Plugin::SLG . '-form_nonce_debug_mode'); ?>
+                                <input type="submit" name="debug_mode" class="button" value="<?php echo $debug_mode ? 'Disable' : 'Enable'; ?>" />
                             </div>
                         </div>
                     </form>

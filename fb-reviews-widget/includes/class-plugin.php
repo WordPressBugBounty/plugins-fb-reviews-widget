@@ -9,15 +9,17 @@ use WP_TrustReviews\Includes\Admin\Admin_Feed_Columns;
 use WP_TrustReviews\Includes\Admin\Admin_Rev;
 use WP_TrustReviews\Includes\Admin\Admin_Rateus_Ajax;
 
+use WP_TrustReviews\Includes\Core\Google_Dao;
+use WP_TrustReviews\Includes\Core\Connect_Helper;
 use WP_TrustReviews\Includes\Core\Core;
 use WP_TrustReviews\Includes\Core\Connect_Google;
 use WP_TrustReviews\Includes\Core\Database;
 
 final class Plugin {
 
-    const VER = '2.4';
+    const VER = '2.7.3';
     const SLG = 'trustreviews';
-    const PFX = 'trustreviews_';
+    const PFX = self::SLG . '_';
     const NAME = 'fb-reviews-widget';
 
     const FB_URL = 'https://facebook.com/';
@@ -126,7 +128,9 @@ final class Plugin {
         $feed_block = new Feed_Block($feed_deserializer, $core, $view, $assets);
         $feed_block->register();
 
-        $connect_google = new Connect_Google($helper);
+        $connect_helper = new Connect_Helper();
+        $google_dao = new Google_Dao($connect_helper);
+        $connect_google = new Connect_Google($helper, $google_dao, $connect_helper);
 
         $reviews_cron = new Reviews_Cron($connect_google, $feed_deserializer);
         $reviews_cron->register();
@@ -186,6 +190,12 @@ final class Plugin {
     }
 
     public function deactivate() {
-        $this->deactivator->deactivate();
+        $hook = Plugin::SLG . '_revupd_schedule';
+        $next_scheduled = wp_next_scheduled($hook);
+
+        if ($next_scheduled) {
+            wp_unschedule_event($next_scheduled, $hook);
+            update_option(Plugin::SLG . '_revupd_cron_timeout', '');
+        }
     }
 }

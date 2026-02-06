@@ -1,10 +1,10 @@
 <?php
 /*
-Plugin Name: Social Reviews & Recommendations
+Plugin Name: Reviews Widgets for Google, Yelp & TripAdvisor
 Plugin URI: https://wordpress.org/plugins/fb-reviews-widget
-Description: Combines Facebook, Google and Yelp Reviews in widgets and shortcodes! Boost user confidence, number of customers and sales on site!
-Version: 2.4
-Author: Trust.reviews <support@trust.reviews>
+Description: Combine Facebook recommendations with Google, Yelp and TripAdvisor reviews in a widget, block or shortcode. Build a trusted website!
+Version: 2.7.3
+Author: Trust.Reviews <support@trust.reviews>
 Author URI: https://trust.reviews
 Text Domain: fb-reviews-widget
 Domain Path: /languages
@@ -21,6 +21,7 @@ if (!defined('ABSPATH')) {
 require(ABSPATH . 'wp-includes/version.php');
 
 define('TRUSTREVIEWS_PLUGIN_FILE' , __FILE__);
+define('TRUSTREVIEWS_PLUGIN_PATH' , plugin_dir_path(TRUSTREVIEWS_PLUGIN_FILE));
 
 require_once __DIR__ . '/autoloader.php';
 
@@ -46,14 +47,6 @@ function plugin_row_meta($input, $file) {
     }
 
     $links = array(
-        //'<a href="' . admin_url('admin.php?page=' . Plugin::SLG . '-support') . '" target="_blank">' .
-            //__('View Documentation', Plugin::NAME) .
-        //'</a>',
-
-        '<a href="' . esc_url('https://trust.reviews') . '" target="_blank">' .
-            __('Upgrade to Business', Plugin::NAME) . ' &raquo;' .
-        '</a>',
-
         '<a href="' . esc_url('https://wordpress.org/support/plugin/' . Plugin::NAME . '/reviews/#new-post') . '" target="_blank">' .
             __('Rate plugin', Plugin::NAME) . ' <span style="color:#ffb900;font-size:1.5em;position:relative;top:0.1em;">★★★★★</span>' .
         '</a>',

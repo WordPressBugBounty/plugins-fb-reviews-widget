@@ -5,6 +5,7 @@ var TrustReviews = TrustReviews || {};
  */
 TrustReviews.Builder = function($, data) {
 
+    const TOAST = rpi.Toast({timeout: 25});
     const AUTOSAVE_KEYUP_TIMEOUT = 1500;
     var AUTOSAVE_TIMEOUT = null;
 
@@ -70,7 +71,7 @@ TrustReviews.Builder = function($, data) {
             '<div class="{slg}-connect-text">Connect Reviews</div>' +
 
             '<div class="{slg}-builder-connect {slg}-connect-facebook">' +
-                '<svg viewBox="0 0 100 100" width="24" height="24" style="border-radius:50%;background:#0866FF;padding:1px;box-sizing:border-box;">' +
+                '<svg viewBox="0 0 100 100" width="24" height="24" style="border-radius:50%;background:#0866ff;padding:2px;box-sizing:border-box;">' +
                     '<use xlink:href="#{slg}-logo-f"></use>' +
                 '</svg>' +
             '</div>' +
@@ -81,6 +82,12 @@ TrustReviews.Builder = function($, data) {
 
             '<div class="{slg}-builder-connect" data-platform="yelp">' +
                 '<svg viewBox="0 0 533.33 533.33" width="24" height="24"><use xlink:href="#{slg}-logo-y"></use></svg>' +
+            '</div>' +
+
+            '<div class="{slg}-builder-connect" data-platform="tripadvisor">' +
+                '<svg viewBox="0 0 132 86" width="24" height="24" style="border-radius:50%;background:#00eb5b;padding:3px;box-sizing:border-box;">' +
+                    '<use xlink:href="#{slg}-logo-ta"></use>' +
+                '</svg>' +
             '</div>' +
 
             '<div class="{slg}-connections"></div>' +
@@ -204,7 +211,7 @@ TrustReviews.Builder = function($, data) {
                 '</div>' +
                 '<div class="{slg}-builder-option">' +
                     '<label>' +
-                        '<input type="checkbox" name="show_round" value="">' +
+                        '<input type="checkbox" name="show_round" value="" checked>' +
                         'Round reviews borders' +
                     '</label>' +
                 '</div>' +
@@ -289,40 +296,7 @@ TrustReviews.Builder = function($, data) {
 
         '</div>' +
 
-        '<div id="{slg}-connect-wizard" title="Easy steps to connect reviews" style="display:none;">' +
-            '<div data-platform="google">' +
-                /*'<p>' +
-                    '<span>1</span> ' +
-                    'Find your Google place on the map below (<u class="{slg}-wiz-arr">Enter a location</u>) and copy found <u><b>Place ID</b></u>' +
-                '</p>' +
-                '<iframe src="https://geo-devrel-javascript-samples.web.app/samples/places-placeid-finder/app/dist" loading="lazy" style="width:100%;height:250px"></iframe>' +
-                '<small style="font-size:13px;color:#555">If you can\'t find your place on this map, please read <a href="' + data.supportUrl + '&{slg}_tab=fig#pid" target="_blank">this manual how to find any Google Place ID</a>.</small>' +
-                '<p>' +
-                    '<span>2</span> ' +
-                    'Paste copied <u><b>Place ID</b></u> in this field and select language if needed' +
-                '</p>' +*/
-                '<iframe id="grc" src="https://app.trustembed.com/grc?authcode={{authcode}}" style="width:100%;height:400px"></iframe>' +
-                '<small class="grw-connect-error"></small>' +
-            '</div>' +
-            '<div data-platform="other">' +
-                '<p>' +
-                    '<span>1</span> ' +
-                    'Find your Yelp business on yelp.com' +
-                '</p>' +
-                '<p>' +
-                    '<span>2</span> ' +
-                    'Copy & paste Yelp business URL to the field below' +
-                '</p>' +
-                '<p>' +
-                    '<input type="text" class="{slg}-connect-id" value="" placeholder="Yelp business link" />' + lang('Choose language if needed') +
-                '</p>' +
-                '<p>' +
-                    '<span>3</span> Click CONNECT REVIEWS button' +
-                '</p>' +
-                '<button class="{slg}-connect-btn">Connect Reviews</button>' +
-            '</div>' +
-            '<small class="{slg}-connect-error"></small>' +
-        '</div>';
+        '<iframe id="connector" src="https://app.trustembed.com/connect?authcode={{authcode}}&lang={{lang}}" style="display:none;position:absolute;top:0;width:100%;height:100%;"></iframe>';
 
     function feed_save_ajax() {
         if (!el('title').value) {
@@ -354,14 +328,18 @@ TrustReviews.Builder = function($, data) {
             });
 
             if (!el('post_id').value) {
-                var post_id = document.querySelector('.' + data.slg).getAttribute('data-id');
+                const post_id = document.querySelector('.' + data.slg).getAttribute('data-id');
+                const toolbar_el = document.querySelector('.' + data.slg + '-toolbar-control');
+                const label = document.createElement('label');
+                label.innerHTML = '<span id="' + data.slg + '_sc_msg">Copy Shortcode </span><input id="' + data.slg + '_sc" type="text" value="[' + data.slg + ' id=' + post_id + ']" data-shortcode="[' + data.slg + ' id=' + post_id + ']" onclick="this.select(); document.execCommand(\'copy\'); window.' + data.slg + '_sc_msg.innerHTML = \'Shortcode Copied! Paste on page. \';" readonly="">';
+                toolbar_el.insertBefore(label, window[data.slg + '_save']);
                 el('post_id').value = post_id;
-                window.location.href = window.location.href + '&' + data.slg + '_feed_id=' + post_id + '&' + data.slg + '_feed_new=1';
-            } else {
-                var $rateus = jq('#rate_us');
-                if ($rateus.length && !$rateus.hasClass(data.slg + '-flash-visible') && !window[data.slg + '_rateus']) {
-                    $rateus.addClass(data.slg + '-flash-visible');
-                }
+                //window.location.href = window.location.href + '&' + data.slg + '_feed_id=' + post_id + '&' + data.slg + '_feed_new=1';
+            }
+
+            var $rateus = jq('#rate_us');
+            if ($rateus.length && !$rateus.hasClass(data.slg + '-flash-visible') && !window[data.slg + '_rateus']) {
+                $rateus.addClass(data.slg + '-flash-visible');
             }
 
             el('save').innerText = 'Save & Update';
@@ -414,18 +392,20 @@ TrustReviews.Builder = function($, data) {
         });
     }
 
-    function connect_ajax(params, authcode, attempt) {
+    function connect_ajax(params, authcode, attempt, cb) {
 
-        var platform = params.platform,
-            connect_btn = jq('.connect-btn');
+        const map_url = params.map_url || params.props.map_url;
+        const platform = params.platform;
+        const connect_btn = jq('.connect-btn');
 
-        el('save').innerText = 'Auto save, wait';
+        el('save').innerText = 'Auto save, wait...';
         el('save').disabled = true;
 
         $.post(ajaxurl, {
-            id        : decodeURIComponent(params.id),
+            map_url   : map_url,
+            id        : params.id,
             lang      : params.lang,
-            local_img : params.local_img || false,
+            local_img : params.local_img || true,
             token     : params.token,
             feed_id   : $('input[name="' + data.slg + '_feed[post_id]"]').val(),
             action    : data.slg + '_connect_' + platform,
@@ -433,67 +413,57 @@ TrustReviews.Builder = function($, data) {
             _wpnonce  : $('#_wpnonce').val()
         }, function(res) {
 
-            console.log('connect_debug:', res);
+            const msg = [];
+            let msgType = 'success';
 
-            //connect_btn[0].innerHTML = 'Connect ' + (platform.charAt(0).toUpperCase() + platform.slice(1));
-            //connect_btn[0].disabled = false;
+            if (res.error?.message) {
+                msgType = 'error';
+                msg.push('<b>Error:</b> ' + res.error.message);
+            }
 
-            var error_el = jq('.connect-error');
+            if (res.quota?.remaining > 0) {
+                msg.push(`<b>${res.quota.remaining} attempts remaining (without your API key).</b>`);
+            }
 
-            if (res.status == 'success') {
-
-                //error_el[0].innerHTML = '';
-
-                try { jq('#connect-wizard').dialog('close'); } catch (e) {}
-
-                var connection_params = {
+            if (res.status === 'success' && res.result) {
+                window.connector.style.display = 'none';
+                connection_add({
                     id        : res.result.id,
                     lang      : params.lang,
                     name      : res.result.name,
                     photo     : res.result.photo,
                     refresh   : true,
-                    local_img : params.local_img,
+                    local_img : params.local_img || true,
                     platform  : platform,
                     props     : {
-                        default_photo : res.result.photo
+                        map_url       : map_url,
+                        default_photo : res.result.photo2
                     }
-                };
-
-                connection_add(connection_params, authcode);
+                }, authcode);
                 serialize_connections();
-
-            } else {
-
-                switch (res.result.error_message) {
-
-                    case 'usage_limit':
-                        $('#dialog').dialog({width: '50%', maxWidth: '600px'});
-                        break;
-
-                    case 'bot_check':
-                        if (attempt > 1) {
-                            return;
-                        }
-                        popup(data.gAppUrl + '/botcheck?authcode=' + authcode, 640, 480, function() {
-                            connect_ajax(params, authcode, attempt + 1);
-                        });
-                        break;
-
-                    default:
-                        if (res.result.error_message.indexOf('The provided Place ID is no longer valid') >= 0) {
-                            error_el[0].innerHTML = 'It seems Google place which you are trying to connect ' +
-                                'does not have a physical address (it\'s virtual or service area), ' +
-                                'unfortunately, Google Places API does not support such locations, it\'s a limitation of Google, not the plugin.<br><br>' +
-                                'However, you can try to connect your Google reviews in our new cloud service ' +
-                                '<a href="https://trust.reviews" target="_blank">Trust.Reviews</a> ' +
-                                'and show it on your WordPress site through universal <b>HTML/JavaScript</b> code.';
-                        } else {
-                            error_el[0].innerHTML = '<b>Error</b>: ' + res.result.error_message;
-                        }
-                }
+                msg.push(`${params.event === 'refresh' ? 'Reviews updated' : 'Widget saved'} successfully.`);
+            } else if (res.quota?.remaining < 1) {
+                msg.push(`Request limit reached. Please try after ${formatResetTime(res.quota.reset_in_seconds)}.`);
             }
 
+
+            TOAST.show({msg: msg.join('<br>'), type: msgType});
+
+            cb && cb();
+
         }, 'json');
+    }
+
+    function formatResetTime(seconds) {
+        if (seconds <= 0) return '0 minutes';
+
+        const d = Math.floor(seconds / 86400);
+        const h = Math.floor((seconds % 86400) / 3600);
+        const m = Math.ceil((seconds % 3600) / 60);
+
+        if (d) return d + ' day' + (d > 1 ? 's' : '') + (h ? ' ' + h + ' hour' + (h > 1 ? 's' : '') : '');
+        if (h) return h + ' hour' + (h > 1 ? 's' : '');
+        return m + ' minute' + (m > 1 ? 's' : '');
     }
 
     function connection_fb(authcode) {
@@ -544,76 +514,84 @@ TrustReviews.Builder = function($, data) {
 
     function connection_add(conn, authcode, checked) {
 
-        var connected_id = connection_id(conn),
-            connected_el = $('#' + connected_id);
+        const connected_id = connection_id(conn);
+        let connected_el = $('#' + connected_id);
 
-        if (!connected_el.length) {
+        if (connected_el.length) {
+            connected_el = connected_el[0];
+        } else {
             connected_el = $('<div class="' + data.slg + '-connection"></div>')[0];
             connected_el.id = connected_id;
-            if (conn.lang != undefined) {
-                connected_el.setAttribute('data-lang', conn.lang);
-            }
             connected_el.setAttribute('data-platform', conn.platform);
-            connected_el.innerHTML = connection_render(conn, checked);
 
             var connections_el = jq('.connections')[0];
             connections_el.appendChild(connected_el);
-
-            jq('.toggle', connected_el).unbind('click').click(function () {
-                $(this).toggleClass('toggled');
-                $(this).next().slideToggle();
-            });
-
-            var file_frame;
-            jq('.connect-photo-change', connected_el).on('click', function(e) {
-                e.preventDefault();
-                upload_photo(connected_el, file_frame, function() {
-                    serialize_connections();
-                });
-                return false;
-            });
-
-            jq('.connect-photo-default', connected_el).on('click', function(e) {
-                change_photo(connected_el, conn.props.default_photo);
-                serialize_connections();
-                return false;
-            });
-
-            $('input[type="text"]', connected_el).keyup(function() {
-                clearTimeout(AUTOSAVE_TIMEOUT);
-                AUTOSAVE_TIMEOUT = setTimeout(serialize_connections, AUTOSAVE_KEYUP_TIMEOUT);
-            });
-
-            $('input[type="checkbox"]', connected_el).click(function() {
-                serialize_connections();
-            });
-
-            $('select.' + data.slg + '-connect-lang', connected_el).change(function() {
-                conn.lang = this.value;
-                connected_el.id = connection_id(conn);
-                connected_el.setAttribute('data-lang', this.value);
-                connect_ajax(conn, authcode, 1);
-                return false;
-            });
-
-            $('input[name="local_img"]', connected_el).unbind('click').click(function() {
-                conn.local_img = this.checked;
-                connect_ajax(conn, authcode, 1);
-            });
-
-            jq('.connect-reconnect', connected_el).click(function() {
-                connect_ajax(conn, authcode, 1);
-                return false;
-            });
-
-            jq('.connect-delete', connected_el).click(function() {
-                if (confirm('Are you sure to delete this business?')) {
-                    $(connected_el).remove();
-                    serialize_connections();
-                }
-                return false;
-            });
         }
+
+        if (conn.lang != undefined) {
+            connected_el.setAttribute('data-lang', conn.lang);
+        }
+        connected_el.innerHTML = connection_render(conn, checked);
+
+        jq('.toggle', connected_el).unbind('click').click(function () {
+            $(this).toggleClass('toggled');
+            $(this).next().slideToggle();
+        });
+
+        var file_frame;
+        jq('.connect-photo-change', connected_el).on('click', function(e) {
+            e.preventDefault();
+            upload_photo(connected_el, file_frame, function() {
+                serialize_connections();
+            });
+            return false;
+        });
+
+        jq('.connect-photo-default', connected_el).on('click', function(e) {
+            change_photo(connected_el, conn.props.default_photo);
+            serialize_connections();
+            return false;
+        });
+
+        $('input[type="text"]', connected_el).keyup(function() {
+            clearTimeout(AUTOSAVE_TIMEOUT);
+            AUTOSAVE_TIMEOUT = setTimeout(serialize_connections, AUTOSAVE_KEYUP_TIMEOUT);
+        });
+
+        $('input[type="checkbox"]', connected_el).click(function() {
+            serialize_connections();
+        });
+
+        $('select.' + data.slg + '-connect-lang', connected_el).change(function() {
+            conn.lang = this.value;
+            connected_el.id = connection_id(conn);
+            connected_el.setAttribute('data-lang', this.value);
+            reconnect(conn, authcode, 1);
+            return false;
+        });
+
+        $('input[name="local_img"]', connected_el).unbind('click').click(function() {
+            conn.local_img = this.checked;
+            reconnect(conn, authcode, 1);
+        });
+
+        jq('.connect-reconnect', connected_el).click(function() {
+            reconnect(conn, authcode, 1);
+            return false;
+        });
+
+        jq('.connect-delete', connected_el).click(function() {
+            if (confirm('Are you sure to delete this business?')) {
+                $(connected_el).remove();
+                serialize_connections();
+            }
+            return false;
+        });
+    }
+
+    function reconnect(conn, authcode) {
+        conn.event = 'refresh';
+        connect_ajax(conn, authcode, 1);
     }
 
     function connection_id(conn) {
@@ -695,22 +673,9 @@ TrustReviews.Builder = function($, data) {
                     '<div class="{slg}-quest-help">Facebook returns incorrect number of reviews for some pages. We reported a <a href="https://developers.facebook.com/support/bugs/570160061284085/" target="_blank">bug</a>, which, unfortunately, has not been fixed.<br>If you have this situation and your FB reviews count is incorrect, just <b>enter the difference between the current and the correct reviews count</b> in this option and the plugin will show the correct count.</div>' +
                 '</div>' : '' ) +
 
-                (conn.refresh != undefined ?
                 '<div class="{slg}-builder-option">' +
                     '<label>' +
-                        '<input type="checkbox" name="refresh" ' + (conn.refresh ? 'checked' : '') + '>' +
-                        'Update reviews daily' +
-                    '</label>' +
-                    '<span class="{slg}-quest {slg}-quest-top {slg}-toggle" title="Click to help">?</span>' +
-                    '<div class="{slg}-quest-help">' +
-                        (conn.platform == 'google' ? 'The plugin uses the Google Places API to get your reviews. <b>The API only returns the 5 most helpful reviews (it\'s a limitation of Google, not the plugin)</b>. This option calls the Places API once in 24 hours (to keep the plugin\'s free and avoid a Google Billing) to check for a new reviews and if there are, adds to the plugin. Thus slowly building up a database of reviews.<br><br>Also if you see the new reviews on Google map, but after some time it\'s not added to the plugin, it means that Google does not include these reviews to the API and the plugin can\'t get this.<br><br>If you need to show <b>all reviews</b>, please use <a href="https://trust.reviews" target="_blank">Business plugin</a> which uses a Google My Business API without API key and billing.' : '') +
-                        (conn.platform == 'yelp' ? 'The plugin uses the Yelp API to get your reviews. <b>The API only returns the 3 most helpful reviews without sorting possibility.</b> When Yelp changes the 3 most helpful the plugin will automatically add the new one to your database. Thus slowly building up a database of reviews.' : '') +
-                    '</div>' +
-                '</div>' : '' ) +
-
-                '<div class="{slg}-builder-option">' +
-                    '<label>' +
-                        '<input type="checkbox" name="local_img" ' + (conn.local_img ? 'checked' : '') + '>' +
+                        '<input type="checkbox" name="local_img" checked>' +
                         'Save images locally (GDPR)' +
                     '</label>' +
                 '</div>' +
@@ -954,18 +919,27 @@ TrustReviews.Builder = function($, data) {
             var OPTS_EL = document.querySelector(data.opt_el);
             if (!OPTS_EL) return;
 
-            OPTS_EL.innerHTML = HTML_CONTENT.replace(/{slg}/g, data.slg).replace('{{authcode}}', data.authcode);
+            OPTS_EL.innerHTML = HTML_CONTENT.replace(/{slg}/g, data.slg).replace('{{authcode}}', data.authcode).replace('{{lang}}', data.lang);
 
             if (data.conns && data.conns.connections && data.conns.connections.length) {
                 deserialize_connections(OPTS_EL, data);
             }
 
-            var $connect_wizard_el = jq('#connect-wizard');
+            //var $connect_wizard_el = jq('#connect-wizard');
 
             jq('.builder-connect[data-platform]').click(function () {
-                let platform = this.getAttribute('data-platform');
-                $connect_wizard_el.attr('data-platform', platform);
-                $connect_wizard_el.dialog({modal: true, width: '50%', maxWidth: '600px'});
+                document.body.appendChild(window.connector);
+
+                const url = new URL(window.connector.src);
+                url.searchParams.set('platform', this.getAttribute('data-platform'));
+                window.connector.src = url.toString();
+
+                window.connector.style.display = 'block';
+                window.connector.contentWindow.postMessage({action: 'focus'}, '*');
+
+                //let platform = this.getAttribute('data-platform');
+                //$connect_wizard_el.attr('data-platform', platform);
+                //$connect_wizard_el.dialog({modal: true, width: '50%', maxWidth: '600px'});
             });
 
             // GRC
@@ -975,7 +949,12 @@ TrustReviews.Builder = function($, data) {
                     let data = e.data;
                     switch (data.action) {
                         case 'connect':
-                            connect_ajax(data, data.authcode, 1);
+                            connect_ajax(data, data.authcode, 1, function() {
+                                window.connector.contentWindow.postMessage({action: 'connect_done'}, '*');
+                            });
+                            break;
+                        case 'close':
+                            window.connector.style.display = 'none';
                             break;
                     }
                 }
@@ -1015,16 +994,28 @@ TrustReviews.Builder = function($, data) {
             });
 
             jq('#_save').click(function() {
-                serialize_connections();
-                return false;
+                const url = new URL(window.location.href);
+                if (url.searchParams.has(data.slg + '_feed_id')) {
+                    serialize_connections();
+                    return false;
+                } else {
+                    return true;
+                }
             });
 
-            window.addEventListener('beforeunload', function(e) {
-                if (!AUTOSAVE_TIMEOUT) return undefined;
+            let _isSubmit = false;
+            const form = document.querySelector('.' + data.slg + '-builder form');
+            form.addEventListener('submit', function () {
+                _isSubmit = true;
+            });
 
-                var msg = 'It looks like you have been editing something. If you leave before saving, your changes will be lost.';
-                (e || window.event).returnValue = msg;
-                return msg;
+            // Confirmation alert before close the page if unautosave
+            window.addEventListener('beforeunload', function(e) {
+                const url = new URL(window.location.href);
+                if (el('post_id').value && !_isSubmit && (!url.searchParams.has(data.slg + '_feed_id') || AUTOSAVE_TIMEOUT)) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
             });
         }
 

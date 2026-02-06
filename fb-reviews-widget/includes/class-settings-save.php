@@ -44,7 +44,7 @@ class Settings_Save {
         }
 
         if (isset($_POST['save'])) {
-            $fields = array('demand_assets', 'minified_assets', 'google_api_key', 'yelp_api_key');
+            $fields = array('demand_assets', 'minified_assets', 'inlinecss_off', 'google_api_key', 'yelp_api_key');
             foreach ($fields as $field) {
 
                 if (isset($_POST[$field])) {
@@ -76,9 +76,9 @@ class Settings_Save {
         }
 
         if (isset($_POST['reset_all'])) {
-            $reset_all_multisite = sanitize_text_field(wp_unslash($_POST['reset_all_multisite']));
+            $reset_all_multisite = isset($_POST['reset_all_multisite']) ? sanitize_text_field(wp_unslash($_POST['reset_all_multisite'])) : null;
             $this->activator->drop_db($reset_all_multisite);
-            $this->activator->delete_all_options($reset_all_multisite);
+            $this->activator->delete_all_options($reset_all_multisite, array(Plugin::SLG . '_debug_mode'));
             $this->activator->delete_all_feeds($reset_all_multisite);
             $this->reviews_cron->deactivate();
             $notice_code = 'settings_reset_all';

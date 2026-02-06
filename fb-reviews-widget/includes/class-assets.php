@@ -8,18 +8,21 @@ class Assets {
     private $version;
     private $debug;
 
+    private $css_cache = array();
+
     private static $css_assets = array(
+        'rpi-stars-css'                  => 'https://cdn.reviewsplugin.com/assets/css/stars.css',
         Plugin::SLG . '-admin-main-css'      => 'css/admin-main',
-        Plugin::SLG . '-public-clean-css'    => 'css/public-clean',
         Plugin::SLG . '-public-main-css'     => 'css/public-main',
     );
 
     private static $js_assets = array(
+        'rpi-toast-js'                       => 'https://cdn.reviewsplugin.com/assets/js/toast.js',
+        'rpi-time-js'                        => 'https://cdn.reviewsplugin.com/assets/js/time.js',
         Plugin::SLG . '-admin-main-js'       => 'js/admin-main',
         Plugin::SLG . '-admin-builder-js'    => 'js/admin-builder',
         Plugin::SLG . '-admin-apexcharts-js' => 'js/admin-apexcharts',
-        Plugin::SLG . '-public-time-js'      => 'js/public-time',
-        Plugin::SLG . '-public-main-js'      => 'js/public-main',
+        Plugin::SLG . '-public-main-js'      => 'js/public-main'
     );
 
     public function __construct($url, $version, $debug) {
@@ -37,27 +40,31 @@ class Assets {
         } else {
             add_action('wp_enqueue_scripts', array($this, 'register_styles'));
             add_action('wp_enqueue_scripts', array($this, 'register_scripts'));
+
             $demand_assets = get_option(Plugin::SLG . '_demand_assets');
             if (!$demand_assets || $demand_assets != 'true') {
                 add_action('wp_enqueue_scripts', array($this, 'enqueue_public_styles'));
                 add_action('wp_enqueue_scripts', array($this, 'enqueue_public_scripts'));
             }
-            add_filter('script_loader_tag', array($this, 'add_async'), 10, 2);
+
+            add_filter('script_loader_tag', array($this, 'script_async'), 10, 2);
         }
         add_filter('get_rocket_option_remove_unused_css_safelist', array($this, 'rucss_safelist'));
     }
 
-    function add_async($tag, $handle) {
-        $js_assets = array(
-            Plugin::SLG . '-admin-main-js'    => 'js/admin-main',
-            Plugin::SLG . '-admin-builder-js' => 'js/admin-builder',
-            Plugin::SLG . '-public-time-js'   => 'js/public-time',
-            Plugin::SLG . '-public-main-js'   => 'js/public-main',
+    function script_async($tag, $handle) {
+        $defer = array(
+            Plugin::SLG . '-admin-main-js',
+            Plugin::SLG . '-admin-builder-js',
+            Plugin::SLG . '-public-main-js',
         );
-        if (isset($handle) && array_key_exists($handle, $js_assets)) {
-            return str_replace(' src', ' defer="defer" src', $tag);
+        if (!in_array($handle, $defer, true)) {
+            return $tag;
         }
-        return $tag;
+        if (strpos($tag, ' defer') !== false || strpos($tag, ' async') !== false) {
+            return $tag;
+        }
+        return preg_replace('/<script\b/i', '<script defer="defer"', $tag, 1);
     }
 
     function rucss_safelist($safelist) {
@@ -71,12 +78,10 @@ class Assets {
 
     public function register_styles() {
         $styles = array(
+            'rpi-stars-css',
             Plugin::SLG . '-admin-main-css',
             Plugin::SLG . '-public-main-css'
         );
-        if ($this->debug) {
-            array_push($styles, Plugin::SLG . '-public-clean-css');
-        }
         $this->register_styles_loop($styles);
     }
 
@@ -87,8 +92,9 @@ class Assets {
             Plugin::SLG . '-admin-apexcharts-js'
         );
         if ($this->debug) {
+            array_push($scripts, 'rpi-toast-js');
+            array_push($scripts, 'rpi-time-js');
             array_push($scripts, Plugin::SLG . '-admin-builder-js');
-            array_push($scripts, Plugin::SLG . '-public-time-js');
         }
         $this->register_scripts_loop($scripts);
     }
@@ -115,6 +121,7 @@ class Assets {
         );
 
         if ($this->debug) {
+            wp_enqueue_script('rpi-toast-js');
             wp_enqueue_script(Plugin::SLG . '-admin-builder-js');
         }
         wp_localize_script(Plugin::SLG . '-admin-main-js', 'TRUSTREVIEWS_VARS', $vars);
@@ -125,16 +132,30 @@ class Assets {
 
     public function enqueue_public_styles() {
         if ($this->debug) {
-            wp_enqueue_style(Plugin::SLG . '-public-clean-css');
-            wp_style_add_data(Plugin::SLG . '-public-clean-css', 'rtl', 'replace');
+            wp_enqueue_style('rpi-stars-css');
         }
-        wp_enqueue_style(Plugin::SLG . '-public-main-css');
-        wp_style_add_data(Plugin::SLG . '-public-main-css', 'rtl', 'replace');
+
+        $handle = Plugin::SLG . '-public-main-css';
+        $inlinecss_off = get_option(Plugin::SLG . '_inlinecss_off');
+        if ($inlinecss_off !== 'true') {
+            $css = $this->get_css_content('public-main');
+            if (!empty($css)) {
+                wp_dequeue_style($handle);
+                wp_deregister_style($handle);
+                wp_register_style($handle, false);
+                wp_enqueue_style($handle);
+                wp_add_inline_style($handle, $css);
+                return;
+            }
+        }
+
+        wp_enqueue_style($handle);
+        wp_style_add_data($handle, 'rtl', 'replace');
     }
 
     public function enqueue_public_scripts() {
         if ($this->debug) {
-            wp_enqueue_script(Plugin::SLG . '-public-time-js');
+            wp_enqueue_script('rpi-time-js');
         }
         wp_enqueue_script(Plugin::SLG . '-public-main-js');
     }
@@ -152,16 +173,31 @@ class Assets {
     }
 
     public function get_css_asset($asset) {
-        return $this->url . ($this->debug ? 'src/' : '') . self::$css_assets[$asset] . '.css';
+        $css = self::$css_assets[$asset];
+        return strpos($css, 'https:') === 0 ? $css : $this->url . ($this->debug ? 'src/' : $this->version . '/') . $css . '.css';
     }
 
     public function get_js_asset($asset) {
-        $src = $this->debug && !strrpos($asset, 'apexcharts') ? 'src/' : '';
-        return $this->url . $src . self::$js_assets[$asset] . '.js';
+        $js = self::$js_assets[$asset];
+        return strpos($js, 'https:') === 0 ? $js : $this->url . ($this->debug ? 'src/' : $this->version . '/') . $js . '.js';
     }
 
     public function version() {
         return $this->version;
     }
 
+    private function get_css_content($name) {
+        $key = $name . (is_rtl() ? '-rtl' : '');
+
+        if (isset($this->css_cache[$key])) {
+            return $this->css_cache[$key];
+        }
+
+        $file = TRUSTREVIEWS_PLUGIN_PATH . '/assets/' . ($this->debug ? 'src/' : $this->version . '/') . 'css/' . $key . '.css';
+        if (!file_exists($file) || !is_readable($file)) {
+            return $this->css_cache[$key] = '';
+        }
+        $css = (string) file_get_contents($file);
+        return $this->css_cache[$key] = $css;
+    }
 }

@@ -111,33 +111,6 @@ class Core {
         }
         $options = $connection->options;
 
-        /*if (isset($connection->connections) && is_array($connection->connections)) {
-            $google_business = null;
-
-        } else {
-            $google_business = isset($connection->google) ? $connection->google : null;
-        }
-
-        $google_biz = array();
-        $google_reviews = array();
-
-        if ($google_business != null) {
-
-            foreach ($google_business as $biz) {
-
-                $result = $this->get_google_reviews($biz, $is_admin);
-                array_push($google_biz, $result['business']);
-                $google_reviews = array_merge($google_reviews, $result['reviews']);
-
-                if (isset($biz->refresh) && $biz->refresh) {
-                    $args = array($biz->id);
-                    if (isset($biz->lang) && strlen($biz->lang) > 0) {
-                        array_push($args, $biz->lang);
-                    }
-                }
-            }
-        }*/
-
         $bizs = [];
         $reviews = [];
 
@@ -156,34 +129,6 @@ class Core {
         }
 
         usort($reviews, array($this, 'sort_recent'));
-
-        //$reviews = array();
-        if (!$options->hide_reviews) {
-
-            /*$revs = array();
-            if (count($google_reviews) > 0) {
-                array_push($revs, $google_reviews);
-            }
-
-            // Sorting
-            while (count($revs) > 0) {
-                foreach ($revs as $i => $value) {
-                    $review = array_shift($revs[$i]);
-                    array_push($reviews, $review);
-                    if (count($revs[$i]) < 1) {
-                        unset($revs[$i]);
-                    }
-                }
-            }
-
-            // Normalize reviews array indexes after unset filter above
-            $reviews = array_values($reviews);*/
-
-            // Trim reviews limit
-            /*if ($options->reviews_limit > 0) {
-                $reviews = array_slice($google_reviews, 0, $options->reviews_limit);
-            }*/
-        }
 
         return array('businesses' => $bizs, 'reviews' => $reviews, 'options' => $options);
     }
@@ -206,20 +151,54 @@ class Core {
         if ($place) {
 
             // Get reviews
-            $reviews_where = $is_admin ? '' : ' AND hide = \'\'';
+            $hidden_ids  = array();
+            $where_plain = $is_admin ? '' : " AND r2.hide = ''";
+            $where_r     = $is_admin ? '' : " AND r.hide = ''";
 
-            $reviews_lang = strlen($biz->lang) > 0 ? $biz->lang : 'en';
-            $reviews_where = $reviews_where . ' AND (language = \'' . $reviews_lang . '\' OR language = \'\' OR language IS NULL)';
+            if (isset($options->hidden) && !$is_admin) {
+                $hidden_ids = $this->parse_hidden_ids($options->hidden);
+                if (!empty($hidden_ids)) {
+                    $hidden_phs   = implode(',', array_fill(0, count($hidden_ids), '%d'));
+                    $where_plain .= ' AND r2.id NOT IN (' . $hidden_phs . ')';
+                    $where_r     .= ' AND r.id NOT IN (' . $hidden_phs . ')';
+                }
+            }
 
-            $revs = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT * FROM " . $wpdb->prefix . Database::REVIEW_TABLE .
-                    " WHERE biz_id = %d" . $reviews_where . " ORDER BY time DESC", $place->id
-                )
-            );
+            if (empty($biz->lang)) {
+
+                $sql = "SELECT r.*
+                        FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r
+                        WHERE r.biz_id = %d{$where_r}
+                            AND r.author_url IS NOT NULL
+                            AND NOT EXISTS (
+                                SELECT 1
+                                FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
+                                WHERE r2.biz_id = r.biz_id
+                                    AND r2.author_url = r.author_url{$where_plain}
+                                    AND (
+                                        r2.time > r.time
+                                        OR (r2.time = r.time AND r2.id > r.id)
+                                    )
+                            )
+                        ORDER BY r.time DESC, r.id DESC";
+
+                $params = array_merge([$place->id], $hidden_ids, $hidden_ids);
+
+            } else {
+
+                $sql = "SELECT r2.*
+                        FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
+                        WHERE r2.biz_id = %d{$where_plain} AND (r2.language = %s OR r2.language IS NULL)
+                        ORDER BY r2.time DESC";
+
+                $params = array_merge([$place->id], $hidden_ids);
+                $params[] = $biz->lang;
+            }
+
+            $revs = $wpdb->get_results($wpdb->prepare($sql, $params));
 
             // Setup photo
-            $place->photo = strlen($biz->photo) > 0 ? $biz->photo : (strlen($place->photo) > 0 ? $place->photo : Plugin::G_BIZ_LOGO());
+            $place->photo = empty($biz->photo) ? (empty($place->photo) ? Plugin::G_BIZ_LOGO() : $place->photo) : $biz->photo;
 
             // Calculate reviews count
             if (isset($place->review_count) && $place->review_count > 0) {

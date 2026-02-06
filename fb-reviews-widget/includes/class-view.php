@@ -33,9 +33,7 @@ class View {
             $style .= 'margin:0 auto!important;';
         }
 
-        ?>
-        <div class="{slg} wpac<?php if ($options->dark_theme) { ?> wp-dark<?php } ?>"<?php if ($style) { ?> style="<?php echo $style;?>"<?php } ?> data-id="<?php echo $feed_id; ?>" data-layout="<?php echo $options->view_mode; ?>" data-exec="false">
-            <?php
+        ?><div class="{slg}<?php if ($options->dark_theme) { ?> wp-dark<?php } ?>"<?php if ($style) { ?> style="<?php echo $style;?>"<?php } ?> data-id="<?php echo $feed_id; ?>" data-layout="<?php echo $options->view_mode; ?>" data-exec="false"><?php
             switch ($options->view_mode) {
                 case 'slider':
                     $this->render_slider($businesses, $reviews, $options, $is_admin);
@@ -47,9 +45,7 @@ class View {
                     $this->render_list($businesses, $reviews, $options, $is_admin);
             }
             $this->view_svg->render();
-            ?>
-        </div>
-        <?php
+        ?></div><?php
         return preg_replace('/{slg}/', Plugin::SLG, preg_replace('/[\n\r]|(>)\s+(<)/', '$1$2', ob_get_clean()));
     }
 
@@ -69,7 +65,7 @@ class View {
             <?php if (count($businesses) > 0) { ?>
             <div class="{slg}-header">
                 <div class="{slg}-header-inner">
-                    <div class="{slg}-place<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?>">
+                    <div class="{slg}-flex<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?>" style="--gap:12px;--dir:row;">
                     <?php $this->place(
                         $businesses[0]->rating,
                         $businesses[0],
@@ -111,7 +107,7 @@ class View {
         if (count($businesses) > 0) { ?>
         <div class="{slg}-header">
             <div class="{slg}-header-inner">
-                <div class="{slg}-place<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?>">
+                <div class="{slg}-flex<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?>" style="--gap:12px;--dir:row;">
                 <?php $this->place(
                     $businesses[0]->rating,
                     $businesses[0],
@@ -164,18 +160,20 @@ class View {
     private function render_list($businesses, $reviews, $options, $is_admin = false) {
         ?>
         <div class="{slg}-list">
-            <?php foreach ($businesses as $business) { ?>
-            <div class="{slg}-place<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?>">
-            <?php $this->place(
-                $business->rating,
-                $business,
-                $business->photo,
-                $reviews,
-                $options
-            ); ?>
+            <div class="{slg}-flex" style="--dir:row;--align:center;--gap:12px;--wrap:wrap">
+                <?php foreach ($businesses as $business) { ?>
+                <div class="{slg}-place<?php if ($options->header_center) { ?> {slg}-place-center<?php } ?> {slg}-flex" style="--dir:row;--align:star;--gap:12px">
+                <?php $this->place(
+                    $business->rating,
+                    $business,
+                    $business->photo,
+                    $reviews,
+                    $options
+                ); ?>
+                </div>
+                <?php } ?>
             </div>
-            <?php }
-            if (!$options->hide_reviews) { ?>
+            <?php if (!$options->hide_reviews) { ?>
             <div class="{slg}-content-inner">
                 <?php $this->place_reviews($reviews, $options, $is_admin); ?>
             </div>
@@ -187,11 +185,9 @@ class View {
     function place($rating, $place, $place_img, $reviews, $options, $show_powered = true, $show_writereview = false) {
         ?>
         <?php if (!$options->header_hide_photo) { ?>
-        <div class="{slg}-left">
-            <img src="<?php echo $place_img; ?>" alt="<?php echo $place->name; ?>" width="50" height="50" title="<?php echo $place->name; ?>">
-        </div>
+        <img src="<?php echo esc_url($place_img); ?>" class="{slg}-img" alt="<?php echo esc_attr($place->name); ?>" width="50" height="50" title="<?php echo esc_attr($place->name); ?>">
         <?php } ?>
-        <div class="{slg}-right">
+        <div class="{slg}-flex" data-platform="<?php echo $place->provider; ?>" style="--dir:column;--gap:8px">
             <?php if (!$options->header_hide_name) { ?>
             <div class="{slg}-name">
                 <?php $place_name_content = '<span>' . $place->name . '</span>';
@@ -199,7 +195,7 @@ class View {
             </div>
             <?php } ?>
 
-            <?php $this->place_rating($rating, $place->review_count, $options->hide_based_on); ?>
+            <?php $this->place_rating($rating, $place->review_count, $place->provider, $options->hide_based_on); ?>
 
             <?php if ($show_powered) { $this->powered($place, $options); } ?>
 
@@ -214,15 +210,11 @@ class View {
         <?php
     }
 
-    function place_rating($rating, $review_count, $hide_based_on) {
-        ?>
-        <div>
-            <span class="{slg}-rating"><?php echo $rating; ?></span>
-            <span class="{slg}-stars"><?php $this->stars($rating); ?></span>
-        </div>
-        <?php if (!$hide_based_on && isset($review_count)) { ?>
-        <div class="{slg}-powered"><?php echo vsprintf(__('Based on %s reviews', Plugin::NAME), $this->array($review_count)); ?></div>
-        <?php }
+    function place_rating($rating, $review_count, $provider, $hide_based_on) {
+        $this->stars($rating, $provider, true);
+        if (!$hide_based_on && isset($review_count)) {
+        ?><div class="{slg}-powered"><?php echo vsprintf(__('Based on %s reviews', Plugin::NAME), $this->array($review_count)); ?></div><?php
+        }
     }
 
     function place_reviews($reviews, $options, $is_admin = false) {
@@ -258,7 +250,7 @@ class View {
         ?>
         <div class="{slg}-list-review<?php echo $addcls; ?><?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo $review->provider; ?>">
             <?php if (!$options->hide_avatar) { ?>
-            <div class="{slg}-left">
+            <div class="{slg}-flex" style="--dir:row;--align:star;--gap:12px">
                 <?php
                 $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
                 if (strlen($review->author_img) > 0) {
@@ -270,32 +262,32 @@ class View {
                     $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
                     $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
                 }
-                $this->image($author_img, $review->author_name, $options->lazy_load_img, $default_avatar);
+                $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
                 ?>
+                <div class="{slg}-flex" style="--dir:column;--align:star;--gap:4px">
+                    <?php
+                    if (strlen($review->author_url) > 0) {
+                        $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
+                    } else {
+                        if (strlen($review->author_name) > 0) {
+                            $author_name = $review->author_name;
+                        } else {
+                            $author_name = __('Google User', Plugin::NAME);
+                        }
+                        ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
+                    }
+                    ?>
+                    <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo esc_html(gmdate("H:i d M y", (int)$review->time)); ?></div>
+                    <div class="{slg}-feedback">
+                        <?php echo $this->stars($review->rating, $review->provider); ?>
+                        <span class="{slg}-text"><?php echo $this->trim_text($review->text, $options->text_size); ?></span>
+                    </div>
+                    <?php if ($is_admin && !empty($review->id)) {
+                        echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
+                    } ?>
+                </div>
             </div>
             <?php } ?>
-            <div class="{slg}-right">
-                <?php
-                if (strlen($review->author_url) > 0) {
-                    $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
-                } else {
-                    if (strlen($review->author_name) > 0) {
-                        $author_name = $review->author_name;
-                    } else {
-                        $author_name = __('Google User', Plugin::NAME);
-                    }
-                    ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
-                }
-                ?>
-                <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo gmdate("H:i d M y", $review->time); ?></div>
-                <div class="{slg}-feedback">
-                    <span class="{slg}-stars"><?php echo $this->stars($review->rating); ?></span>
-                    <span class="{slg}-text"><?php echo $this->trim_text($review->text, $options->text_size); ?></span>
-                </div>
-                <?php if ($is_admin) {
-                    echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
-                } ?>
-            </div>
         </div>
         <?php
     }
@@ -308,7 +300,7 @@ class View {
         ?>
         <div class="{slg}-review<?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo $review->provider; ?>">
             <div class="{slg}-review-inner<?php echo $addcls; ?>">
-                <div class="{slg}-left">
+                <div class="{slg}-flex" style="--gap:12px;--dir:row;--align:center">
                     <?php
                     // Google reviewer avatar
                     $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
@@ -321,49 +313,58 @@ class View {
                         $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
                         $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
                     }
-                    $this->image($author_img, $review->author_name, $options->lazy_load_img, $default_avatar);
-
-                    // Google reviewer name
-                    if (strlen($review->author_url) > 0) {
-                        $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
-                    } else {
-                        if (strlen($review->author_name) > 0) {
-                            $author_name = $review->author_name;
+                    $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
+                    ?><div class="{slg}-flex" style="--gap:6px;--dir:column;--align:star;--overflow:hidden"><?php
+                        // Google reviewer name
+                        if (strlen($review->author_url) > 0) {
+                            $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
                         } else {
-                            $author_name = __('Google User', Plugin::NAME);
+                            if (strlen($review->author_name) > 0) {
+                                $author_name = $review->author_name;
+                            } else {
+                                $author_name = __('Google User', Plugin::NAME);
+                            }
+                            ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
                         }
-                        ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
-                    }
-                    ?>
-                    <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo gmdate("H:i d M y", $review->time); ?></div>
+                        ?>
+                        <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo esc_html(gmdate("H:i d M y", (int)$review->time)); ?></div>
+                    </div>
                 </div>
-                <div class="{slg}-stars"><?php echo $this->stars($review->rating); ?></div>
+                <?php echo $this->stars($review->rating, $review->provider); ?>
                 <div>
                     <div class="{slg}-feedback" <?php if (strlen($options->slider_text_height) > 0) {?> style="height:<?php echo $options->slider_text_height; ?>!important"<?php } ?>>
                         <?php if (strlen($review->text) > 0) { ?>
                         <span class="{slg}-text"><?php echo $this->trim_text($review->text, $options->text_size); ?></span>
                         <?php } ?>
                     </div>
-                    <?php if ($is_admin && isset($review->id)) {
-                        echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
-                    } ?>
                 </div>
-                <?php $this->social_logo($review->provider); ?>
+                <?php $this->social_logo($review->provider);
+                if ($is_admin && isset($review->id)) {
+                    echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
+                } ?>
             </div>
         </div>
         <?php
     }
 
-    function stars($rating) {
-        foreach (array(1,2,3,4,5) as $val) {
-            $score = $rating - $val;
-            if ($score >= 0) {
-                ?><svg width="22" height="22" viewBox="0 0 1792 1792"><use xlink:href="#{slg}-star"/></svg><?php
-            } else if ($score > -1 && $score < 0) {
-                ?><svg width="22" height="22" viewBox="0 0 1792 1792"><use xlink:href="#{slg}-star-half"/></svg><?php
-            } else {
-                ?><svg width="22" height="22" viewBox="0 0 1792 1792"><use xlink:href="#{slg}-star-o"/></svg><?php
-            }
+    function stars($rating, $provider = '', $show_rating = false) {
+        switch ($provider) {
+            case 'facebook':
+                if ($show_rating) {
+                    ?><span class="rpi-stars" style="--rating:<?php echo $rating; ?>"><?php echo $rating; ?></span><?php
+                } else {
+                    $text = ($rating < 2 ? "doesn't" : "") . ' recommends';
+                    ?><span class="rpi-star-fb" data-rating="<?php echo $rating; ?>"><?php echo $text; ?></span><?php
+                }
+                break;
+            case 'yelp':
+            case 'tripadvisor':
+                $data_atts = ' data-stars="' . floor($rating * 2) / 2 . '"';
+                $data_atts .= $show_rating ? ' data-rating="' . $rating . '"' : '';
+                ?><span class="rpi-stars-<?php echo $provider; ?>"<?php echo $data_atts; ?>><i></i><i></i><i></i><i></i><i></i></span><?php
+                break;
+            default:
+                ?><span class="rpi-stars" style="--rating:<?php echo $rating; ?>"><?php if ($show_rating) echo $rating; ?></span><?php
         }
     }
 
@@ -380,15 +381,10 @@ class View {
 
     private function social_logo($prov) {
         switch ($prov) {
-            case 'google':
-                $this->google_logo();
-                break;
-            case 'facebook':
-                $this->facebook_logo();
-                break;
-            case 'yelp':
-                $this->yelp_logo();
-                break;
+            case 'google'      : $this->google_logo();      break;
+            case 'facebook'    : $this->facebook_logo();    break;
+            case 'yelp'        : $this->yelp_logo();        break;
+            case 'tripadvisor' : $this->tripadvisor_logo(); break;
         }
     }
 
@@ -404,8 +400,12 @@ class View {
         ?><svg viewBox="0 0 533.33 533.33" width="44" height="44"><use xlink:href="#{slg}-logo-y"/></svg><?php
     }
 
+    private function tripadvisor_logo() {
+        ?><svg viewBox="0 0 132 86" width="44" height="44" class="{slg}-ta"><use xlink:href="#{slg}-logo-ta"/></svg><?php
+    }
+
     private function powered($biz, $opt) {
-        ?><div class="{slg}-powered" data-platform="<?php echo $biz->provider; ?>"><?php
+        ?><div class="{slg}-powered {slg}-flex" data-platform="<?php echo $biz->provider; ?>" style="--gap: 2px;--dir:row;--align:center"><?php
         switch ($biz->provider) {
             case 'google':
                 ?><img src="<?php echo Plugin::ASSETS_URL(); ?>img/powered_by_google_on_<?php if ($opt->dark_theme) { ?>non_<?php } ?>white.png" alt="powered by Google" width="144" height="18" title="powered by Google"><?php
@@ -416,16 +416,23 @@ class View {
             case 'yelp':
                 ?>powered by <?php echo $this->anchor($biz->url, '', '<img src="' . Plugin::ASSETS_URL() . 'img/yelp-logo.png" alt="Yelp logo" width="60" height="31" title="Yelp logo">', $opt->open_link, $opt->nofollow_link); ?><?php
                 break;
+            case 'tripadvisor':
+                ?>powered by <span>TripAdvisor</span><?php
+                break;
         }
         ?></div><?php
     }
 
     function anchor($url, $class, $text, $open_link, $nofollow_link) {
-        echo '<a href="' . $url . '"' . ($class ? ' class="' . $class . '"' : '') . ($open_link ? ' target="_blank"' : '') . ' rel="' . ($nofollow_link ? 'nofollow ' : '') . 'noopener">' . $text . '</a>';
+        $href  = esc_url($url);
+        $class_attr = $class ? ' class="' . esc_attr($class) . '"' : '';
+        $target_rel = $open_link ? ' target="_blank"' : '';
+        $rel_attr   = ' rel="' . ($nofollow_link ? 'nofollow ' : '') . 'noopener"';
+        echo '<a href="' . $href . '"' . $class_attr . $target_rel . $rel_attr . '>' . wp_kses_post($text) . '</a>';
     }
 
-    function image($src, $alt, $lazy, $def_ava = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', $atts = '') {
-        ?><img src="<?php echo $src; ?>" <?php if ($lazy) { ?>loading="lazy"<?php } ?> alt="<?php echo $alt; ?>" width="50" height="50" title="<?php echo $alt; ?>" onerror="if(this.src!='<?php echo $def_ava; ?>')this.src='<?php echo $def_ava; ?>';" <?php echo $atts; ?>><?php
+    function image($src, $cls = '', $alt, $lazy, $def_ava = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', $atts = '') {
+        ?><img src="<?php echo esc_url($src); ?>" <?php if ($lazy) { ?>loading="lazy"<?php } ?> class="<?php echo esc_attr($cls); ?>" alt="<?php echo esc_attr($alt); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url($def_ava); ?>';" <?php echo $atts; ?>><?php
     }
 
     function js_loader($cls, $func, $data = '') {
@@ -444,12 +451,12 @@ class View {
                 $visible_text = $this->substr($text, 0, $idx - 1);
                 $invisible_text = $this->substr($text, $idx - 1, $this->strlen($text));
             }
-            echo $visible_text;
+            echo wp_kses_post(balanceTags($visible_text, true));
             if ($this->strlen($invisible_text) > 0) {
-                ?><span>... </span><span class="wp-more"><?php echo $invisible_text; ?></span><span class="wp-more-toggle"><?php echo __('read more', Plugin::NAME); ?></span><?php
+                ?><span>... </span><span class="wp-more"><?php echo wp_kses_post(balanceTags($invisible_text, true)); ?></span><span class="wp-more-toggle"><?php echo __('read more', Plugin::NAME); ?></span><?php
             }
         } else {
-            echo $text;
+            echo wp_kses_post(balanceTags($text, true));
         }
     }
 

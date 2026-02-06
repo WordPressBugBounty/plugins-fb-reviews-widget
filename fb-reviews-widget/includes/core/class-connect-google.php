@@ -12,9 +12,13 @@ class Connect_Google {
     const YELP_API_URL = 'https://api.yelp.com/v3/businesses/';
 
     private $helper;
+    private $google_dao;
+    private $connect_helper;
 
-    public function __construct(Helper $helper) {
+    public function __construct(Helper $helper, Google_Dao $google_dao, Connect_Helper $connect_helper) {
         $this->helper = $helper;
+        $this->google_dao = $google_dao;
+        $this->connect_helper = $connect_helper;
 
         add_action('wp_ajax_' . Plugin::SLG . '_hide_review', array($this, 'hide_review'));
         add_action('wp_ajax_' . Plugin::SLG . '_connect_google', array($this, 'connect_google'));
@@ -43,13 +47,13 @@ class Connect_Google {
 
                 // Cache clear
                 if ($_POST['feed_id']) {
-                    delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $_POST['feed_id'] . '_reviews', false);
+                    delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $_POST['feed_id'] . '_reviews');
                 } else {
                     $feed_ids = get_option(Plugin::SLG . '_feed_ids');
                     if (!empty($feed_ids)) {
                         $ids = explode(",", $feed_ids);
                         foreach ($ids as $id) {
-                            delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $id . '_reviews', false);
+                            delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $id . '_reviews');
                         }
                     }
                 }
@@ -63,76 +67,93 @@ class Connect_Google {
     }
 
     public function connect_google() {
-        if (current_user_can('manage_options')) {
-            if (isset($_POST['_wpnonce']) === false) {
-                $error = __('Unable to call request. Make sure you are accessing this page from the Wordpress dashboard.', Plugin::NAME);
-                $response = compact('error');
-            } else {
-                check_admin_referer(Plugin::SLG . '_wpnonce');
-
-                if (isset($_POST['key'])) {
-                    $key = sanitize_text_field(wp_unslash($_POST['key']));
-                    if (strlen($key) > 0) {
-                        update_option(Plugin::SLG . '_google_api_key', $key);
-                    }
-                }
-                $google_api_key = get_option(Plugin::SLG . '_google_api_key');
-
-                $id = sanitize_text_field(wp_unslash($_POST['id']));
-                $lang = sanitize_text_field(wp_unslash($_POST['lang']));
-                $local_img = sanitize_text_field(wp_unslash($_POST['local_img']));
-                $token = sanitize_text_field(wp_unslash($_POST['token']));
-
-                if ($google_api_key && strlen($google_api_key) > 0) {
-                    $url = $this->api_url($id, $google_api_key, $lang);
-                } else {
-                    $url = 'https://app.trustembed.com/grc/details/json?pid=' . $id . '&token=' . $token .
-                           '&siteurl=' . get_option('siteurl') . '&authcode=' . get_option(Plugin::SLG . '_auth_code');
-
-                    /*$url = Plugin::G_APP_URL . '/get/json' .
-                           '?siteurl=' . get_option('siteurl') .
-                           '&authcode=' . get_option(Plugin::SLG . '_auth_code') .
-                           '&pid=' . $id;*/
-                    if ($lang && strlen($lang) > 0) {
-                        $url = $url . '&lang=' . $lang;
-                    }
-                }
-
-                $res = wp_remote_get($url);
-                $body = wp_remote_retrieve_body($res);
-                $body_json = json_decode($body);
-
-                if ($body_json && isset($body_json->result)) {
-
-                    if ($google_api_key && strlen($google_api_key) > 0) {
-                        $photo = $this->business_avatar($body_json->result, $google_api_key);
-                        $body_json->result->business_photo = $photo;
-                    }
-
-                    $this->save_google_reviews($body_json->result, $local_img);
-
-                    $result = array(
-                        'id'      => $body_json->result->place_id,
-                        'name'    => $body_json->result->name,
-                        'photo'   => isset($body_json->result->business_photo) && strlen($body_json->result->business_photo)
-                                         ? $body_json->result->business_photo : Plugin::G_BIZ_LOGO(),
-                        'reviews' => $body_json->result->reviews
-                    );
-                    $status = 'success';
-
-                    if ($_POST['feed_id']) {
-                        delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $_POST['feed_id'] . '_reviews', false);
-                    }
-                } else {
-                    $result = $body_json;
-                    $status = 'failed';
-                }
-                $response = compact('status', 'result');
-            }
-            header('Content-type: text/javascript');
-            echo json_encode($response);
-            die();
+        if (!current_user_can('manage_options')) {
+            return;
         }
+
+        $response = array(
+            'status' => 'failed',
+            'result' => null,
+            'error'  => null,
+            'quota'  => null,
+        );
+
+        if (!isset($_POST['_wpnonce'])) {
+            $response['error'] = __('Unable to call request. Make sure you are accessing this page from the Wordpress dashboard.', Plugin::NAME);
+            wp_send_json($response);
+        }
+
+        check_admin_referer(Plugin::SLG . '_wpnonce');
+
+        if (isset($_POST['key'])) {
+            $key = sanitize_text_field(wp_unslash($_POST['key']));
+            if (strlen($key) > 0) {
+                update_option(Plugin::SLG . '_google_api_key', $key);
+            }
+        }
+
+        $google_api_key = get_option(Plugin::SLG . '_google_api_key');
+        $lang = sanitize_text_field(wp_unslash($_POST['lang']));
+        $local_img = sanitize_text_field(wp_unslash($_POST['local_img']));
+
+        if ($google_api_key && strlen($google_api_key) > 0) {
+            $id = sanitize_text_field(wp_unslash($_POST['id']));
+            $url = $this->api_url($id, $google_api_key, $lang);
+            $res = wp_remote_get($url);
+        } else {
+            $params = array(
+                'url' => isset($_POST['map_url']) ? wp_unslash($_POST['map_url']) : '',
+            );
+
+            if (!empty($lang)) {
+                $params['lang'] = $lang;
+            }
+
+            $res = wp_remote_post('https://app.trustembed.com/connect/reviews', array(
+                'body' => $params
+            ));
+        }
+
+        if (is_wp_error($res)) {
+            $response['error'] = $res->get_error_message();
+            wp_send_json($response);
+        }
+
+        $body = wp_remote_retrieve_body($res);
+        $body_json = json_decode($body);
+
+        if (!$body_json) {
+            $response['error'] = 'Invalid JSON response';
+            wp_send_json($response);
+        }
+
+        $response['error'] = isset($body_json->error) ? $body_json->error : null;
+        $response['quota'] = isset($body_json->quota) ? $body_json->quota : null;
+
+        if (isset($body_json->result)) {
+            if ($google_api_key && strlen($google_api_key) > 0) {
+                $photo = $this->business_avatar($body_json->result, $google_api_key);
+                $body_json->result->business_photo = $photo;
+            }
+
+            $this->save_google_reviews($body_json->result, $local_img);
+
+            $response['result'] = array(
+                'id'      => $body_json->result->place_id,
+                'name'    => $body_json->result->name,
+                'photo'   => empty($body_json->result->photo) ? Plugin::G_BIZ_LOGO() : $body_json->result->photo,
+                'photo2'  => empty($body_json->result->business_photo) ? Plugin::G_BIZ_LOGO() : $body_json->result->business_photo,
+                'reviews' => isset($body_json->result->reviews) ? $body_json->result->reviews : array(),
+            );
+
+            $response['status'] = 'success';
+
+            if (!empty($_POST['feed_id'])) {
+                delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . sanitize_text_field(wp_unslash($_POST['feed_id'])) . '_reviews');
+            }
+        }
+
+        wp_send_json($response);
     }
 
     function refresh_reviews($args) {
@@ -149,20 +170,15 @@ class Connect_Google {
 
             $url = $this->api_url($pid, $google_api_key, $reviews_lang, 'newest');
 
-        } else {
+        } /*else {
 
             $url = 'https://app.trustembed.com/grc/details/json?pid=' . $id . '&token=' . $token .
                    '&siteurl=' . get_option('siteurl') . '&authcode=' . get_option(Plugin::SLG . '_auth_code') . '&time=' . time();
 
-            /*$url = Plugin::G_APP_URL . '/update/json' .
-                   '?siteurl=' . get_option('siteurl') .
-                   '&authcode=' . get_option(Plugin::SLG . '_auth_code') .
-                   '&pid=' . $pid .
-                   '&time=' . time();*/
             if ($reviews_lang && strlen($reviews_lang) > 0) {
                 $url = $url . '&lang=' . $reviews_lang;
             }
-        }
+        }*/
 
         if (strlen($url) > 0) {
             $res = wp_remote_get($url);
@@ -239,7 +255,7 @@ class Connect_Google {
                     $status = 'success';
 
                     if ($_POST['feed_id']) {
-                        delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $_POST['feed_id'] . '_reviews', false);
+                        delete_transient(Plugin::SLG . '_feed_' . Plugin::VER . '_' . $_POST['feed_id'] . '_reviews');
                     }
                 } else {
                     $result = $body_json;
@@ -255,27 +271,30 @@ class Connect_Google {
 
     function save_google_reviews($place, $local_img) {
         $place->pid = $place->place_id;
-        $place->photo = isset($place->business_photo) ? $place->business_photo : Plugin::G_BIZ_LOGO();
         $place->review_count = $place->user_ratings_total;
+        $place->photo = $this->google_dao->get_place_photo($place, $local_img);
         $place->address = isset($place->formatted_address) ? $place->formatted_address : '';
         foreach ($place->reviews as $review) {
             $review->author_img = $review->profile_photo_url;
         }
-        $this->save_reviews($place, $local_img, 'google');
+        $this->google_dao->save($place, $local_img);
     }
 
     function save_yelp_reviews($place, $local_img) {
+        $platform = 'yelp';
         $place->pid = $place->id;
+        $place->platform = $platform;
         foreach ($place->reviews as $review) {
             $review->time = strtotime($review->time_created);
             $review->author_name = $review->user->name;
             $review->author_img = $review->user->image_url;
             $review->author_url = $review->user->profile_url;
+            $review->platform = $platform;
         }
-        $this->save_reviews($place, $local_img, 'yelp');
+        $this->google_dao->save($place, $local_img);
     }
 
-    function save_reviews($place, $local_img, $platform) {
+    /*function save_reviews($place, $local_img, $platform) {
         global $wpdb;
 
         $biz_id = $wpdb->get_var(
@@ -284,6 +303,17 @@ class Connect_Google {
                 " WHERE pid = %s", $place->pid
             )
         );
+
+        if (empty($place->business_photo)) {
+            $place_img = Plugin::G_BIZ_LOGO();
+        } else {
+            if ($local_img === true || $local_img == 'true') {
+                $img_name = $place->pid . '_' . md5($place->name);
+                $place_img = $this->upload_image($place->business_photo, $img_name);
+            } else {
+                $place_img = $place->business_photo;
+            }
+        }
 
         // Insert or update Google place
         if ($biz_id) {
@@ -300,8 +330,8 @@ class Connect_Google {
             if ($review_count > 0) {
                 $update_params['review_count'] = $review_count;
             }
-            if (isset($place->photo) && strlen($place->photo) > 0) {
-                $update_params['photo'] = $place->photo;
+            if (!empty($place_img)) {
+                $update_params['photo'] = $place_img;
             }
             $wpdb->update($wpdb->prefix . Database::BUSINESS_TABLE, $update_params, array('ID' => $biz_id));
 
@@ -339,7 +369,7 @@ class Connect_Google {
             $wpdb->insert($wpdb->prefix . Database::BUSINESS_TABLE, array(
                 'pid'          => $place->pid,
                 'name'         => $place->name,
-                'photo'        => $place->photo,
+                'photo'        => $place_img,
                 'address'      => $place->address,
                 'rating'       => $place_rating,
                 'url'          => isset($place->url)     ? $place->url     : null,
@@ -433,7 +463,7 @@ class Connect_Google {
                 }
             }
         }
-    }
+    }*/
 
     function api_url($placeid, $google_api_key, $reviews_lang = '', $reviews_sort = '') {
         $url = self::GOOGLE_API_URL . 'details/json?placeid=' . $placeid . '&key=' . $google_api_key;
@@ -457,12 +487,12 @@ class Connect_Google {
                 ),
                 'https://maps.googleapis.com/maps/api/place/photo'
             );
-            return $this->upload_image($url, $response_result_json->place_id);
+            return $this->connect_helper->upload_image($url, $response_result_json->place_id);
         }
         return null;
     }
 
-    function upload_image($url, $name) {
+    /*function upload_image($url, $name) {
         $res = wp_remote_get($url, array('timeout' => 8));
 
         if(is_wp_error($res)) {
@@ -481,6 +511,6 @@ class Connect_Google {
 
         $upload = wp_upload_bits($filename, null, $bits);
         return $upload['url'];
-    }
+    }*/
 
 }
