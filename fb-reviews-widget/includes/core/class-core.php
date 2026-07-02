@@ -120,7 +120,7 @@ class Core {
                     $result = $this->get_fb_reviews($conn, $options);
                     break;
                 default:
-                    $result = $this->get_db_reviews($conn, $is_admin);
+                    $result = $this->get_db_reviews($conn, $options, $is_admin);
             }
             if (isset($result['business'])) {
                 array_push($bizs, $result['business']);
@@ -133,7 +133,7 @@ class Core {
         return array('businesses' => $bizs, 'reviews' => $reviews, 'options' => $options);
     }
 
-    public function get_db_reviews($biz, $is_admin = false) {
+    public function get_db_reviews($biz, $options, $is_admin = false) {
         global $wpdb;
 
         $rating = 0;
@@ -148,98 +148,58 @@ class Core {
             )
         );
 
-        if ($place) {
-
-            // Get reviews
-            $hidden_ids  = array();
-            $where_plain = $is_admin ? '' : " AND r2.hide = ''";
-            $where_r     = $is_admin ? '' : " AND r.hide = ''";
-
-            if (isset($options->hidden) && !$is_admin) {
-                $hidden_ids = $this->parse_hidden_ids($options->hidden);
-                if (!empty($hidden_ids)) {
-                    $hidden_phs   = implode(',', array_fill(0, count($hidden_ids), '%d'));
-                    $where_plain .= ' AND r2.id NOT IN (' . $hidden_phs . ')';
-                    $where_r     .= ' AND r.id NOT IN (' . $hidden_phs . ')';
-                }
-            }
-
-            if (empty($biz->lang)) {
-
-                $sql = "SELECT r.*
-                        FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r
-                        WHERE r.biz_id = %d{$where_r}
-                            AND r.author_url IS NOT NULL
-                            AND NOT EXISTS (
-                                SELECT 1
-                                FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
-                                WHERE r2.biz_id = r.biz_id
-                                    AND r2.author_url = r.author_url{$where_plain}
-                                    AND (
-                                        r2.time > r.time
-                                        OR (r2.time = r.time AND r2.id > r.id)
-                                    )
-                            )
-                        ORDER BY r.time DESC, r.id DESC";
-
-                $params = array_merge([$place->id], $hidden_ids, $hidden_ids);
-
-            } else {
-
-                $sql = "SELECT r2.*
-                        FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
-                        WHERE r2.biz_id = %d{$where_plain} AND (r2.language = %s OR r2.language IS NULL)
-                        ORDER BY r2.time DESC";
-
-                $params = array_merge([$place->id], $hidden_ids);
-                $params[] = $biz->lang;
-            }
-
-            $revs = $wpdb->get_results($wpdb->prepare($sql, $params));
-
-            // Setup photo
-            $place->photo = empty($biz->photo) ? (empty($place->photo) ? Plugin::G_BIZ_LOGO() : $place->photo) : $biz->photo;
-
-            // Calculate reviews count
-            if (isset($place->review_count) && $place->review_count > 0) {
-                $review_count = $place->review_count;
-            } else {
-                $review_count = $wpdb->get_var(
-                    $wpdb->prepare(
-                        "SELECT count(*) FROM " . $wpdb->prefix . Database::REVIEW_TABLE .
-                        " WHERE biz_id = %d", $place->id
-                    )
-                );
-            }
-
-            // Calculate rating
-            $rating = 0;
-            if ($place->rating > 0) {
-                $rating = $place->rating;
-            } else if (count($revs) > 0) {
-                foreach ($revs as $review) {
-                    $rating = $rating + $review->rating;
-                }
-                $rating = round($rating / count($revs), 1);
-            }
-            $rating = number_format((float)$rating, 1, '.', '');
+        if (!$place) {
+            return array('reviews' => array());
         }
+
+        $lang = empty($biz->lang) ? substr(get_locale(), 0, 2) : $biz->lang;
+        $all_langs = isset($options->all_langs) ? (int)(bool)$options->all_langs : (empty($biz->lang) ? 1 : 0);
+
+        $revs = $this->fetch_reviews([$place->id], $options, $lang, $all_langs, 0, $is_admin);
+
+        $place->photo = empty($biz->photo) ? (empty($place->photo) ? Plugin::G_BIZ_LOGO() : $place->photo) : $biz->photo;
+
+        if (isset($place->review_count) && $place->review_count > 0) {
+            $review_count = $place->review_count;
+        } else {
+            $review_count = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT count(*) FROM " . $wpdb->prefix . Database::REVIEW_TABLE .
+                    " WHERE biz_id = %d", $place->id
+                )
+            );
+        }
+
+        $rating = 0;
+        if ($place->rating > 0) {
+            $rating = $place->rating;
+        } else if (count($revs) > 0) {
+            foreach ($revs as $review) {
+                $rating = $rating + $review->rating;
+            }
+            $rating = round($rating / count($revs), 1);
+        }
+        $rating = number_format((float)$rating, 1, '.', '');
 
         $business = json_decode(json_encode(
             array(
-                'id'                  => $biz->id,
-                'name'                => $biz->name ? $biz->name : $place->name,
-                'url'                 => isset($place->url) ? $place->url : null,
-                'photo'               => isset($place->photo) ? $place->photo : Plugin::G_BIZ_LOGO(),
-                'address'             => isset($place->address) ? $place->address : null,
-                'rating'              => $rating,
-                'review_count'        => $review_count,
-                'provider'            => $place->platform
+                'id'           => $biz->id,
+                'name'         => $biz->name ? $biz->name : $place->name,
+                'url'          => isset($place->url) ? $place->url : null,
+                'photo'        => isset($place->photo) ? $place->photo : Plugin::G_BIZ_LOGO(),
+                'address'      => isset($place->address) ? $place->address : null,
+                'rating'       => $rating,
+                'review_count' => $review_count,
+                'provider'     => $place->platform
             )
         ));
 
         $reviews = array();
         foreach ($revs as $rev) {
+            $text = (isset($rev->lang_text) && $rev->lang_text !== null && $rev->lang_text !== '')
+                ? $rev->lang_text
+                : $rev->text;
+
             $review = json_decode(json_encode(
                 array(
                     'id'          => $rev->id,
@@ -247,7 +207,7 @@ class Core {
                     'biz_id'      => $biz->id,
                     'biz_url'     => $place->url,
                     'rating'      => $rev->rating,
-                    'text'        => wp_encode_emoji($rev->text),
+                    'text'        => wp_encode_emoji($text),
                     'author_img'  => $rev->author_img,
                     'author_url'  => $rev->author_url,
                     'author_name' => $rev->author_name,
@@ -259,6 +219,97 @@ class Core {
         }
 
         return array('business' => $business, 'reviews' => $reviews);
+    }
+
+    private function fetch_reviews($place_ids, $options, $lang, $all_langs, $limit, $is_admin) {
+        global $wpdb;
+
+        $where_plain = $is_admin ? '' : " AND r2.hide = ''";
+        $where_r     = $is_admin ? '' : " AND r.hide = ''";
+
+        $hidden_ids = array();
+        if (isset($options->hidden) && !$is_admin) {
+            $hidden_ids = $this->parse_hidden_ids($options->hidden);
+            if (!empty($hidden_ids)) {
+                $hidden_phs   = implode(',', array_fill(0, count($hidden_ids), '%d'));
+                $where_plain .= ' AND r2.id NOT IN (' . $hidden_phs . ')';
+                $where_r     .= ' AND r.id NOT IN (' . $hidden_phs . ')';
+            }
+        }
+
+        if (!is_array($place_ids)) {
+            $place_ids = [$place_ids];
+        }
+        $place_ids_phs = implode(',', array_fill(0, count($place_ids), '%d'));
+
+        $lang_aliases = $this->get_lang_aliases($lang);
+        $lang_phs     = implode(',', array_fill(0, count($lang_aliases), '%s'));
+
+        $sql = "SELECT r.*, t.text AS lang_text
+                FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r
+                LEFT JOIN {$wpdb->prefix}" . Database::TEXT_TABLE . " t
+                    ON t.review_id = r.review_id AND t.lang IN ({$lang_phs})
+                WHERE r.biz_id IN ({$place_ids_phs}){$where_r}
+                  AND (%d = 1 OR t.text IS NOT NULL OR r.language IN ({$lang_phs}) OR r.language IS NULL OR r.language = '')
+                  AND (
+                      r.author_url IS NULL OR r.author_url = ''
+                      OR NOT EXISTS (
+                          SELECT 1 FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
+                          WHERE r2.biz_id = r.biz_id AND r2.author_url = r.author_url{$where_plain}
+                            AND (r2.time > r.time OR (r2.time = r.time AND r2.id > r.id))
+                      )
+                  )
+                ORDER BY r.time DESC, r.id DESC";
+
+        if ($limit > 0) {
+            $sql .= " LIMIT " . (int)$limit;
+        }
+
+        $params = array_merge(
+            $lang_aliases,   // t.lang IN (...)      [LEFT JOIN]
+            $place_ids,      // r.biz_id IN (...)
+            $hidden_ids,     // {$where_r}
+            [$all_langs],    // %d = 1
+            $lang_aliases,   // r.language IN (...)
+            $hidden_ids      // {$where_plain}       [NOT EXISTS]
+        );
+
+        return $wpdb->get_results($wpdb->prepare($sql, $params));
+    }
+
+    private function get_lang_aliases($lang) {
+        $key = strtolower(str_replace('_', '-', trim((string)$lang)));
+        $traditional = array('zh-TW', 'zh-HK', 'zh-MO', 'zh-Hant', 'zh-Hant-TW', 'zh-Hant-HK', 'zh-Hant-MO');
+        $simplified  = array('zh', 'zh-CN', 'zh-SG', 'zh-Hans', 'zh-Hans-CN', 'zh-Hans-SG');
+        if (in_array($key, array_map('strtolower', $traditional), true)) {
+            return array_merge($traditional, array('zh'));
+        }
+        if (in_array($key, array_map('strtolower', $simplified), true)) {
+            return $simplified;
+        }
+        return array($lang);
+    }
+
+    private function parse_hidden_ids($input) {
+        $ids = array();
+        if (empty($input)) {
+            return $ids;
+        }
+        if (is_string($input)) {
+            $parts = preg_split('/\s*,\s*/', $input, -1, PREG_SPLIT_NO_EMPTY);
+        } elseif (is_array($input)) {
+            $parts = $input;
+        } else {
+            return $ids;
+        }
+        foreach ($parts as $p) {
+            $val = intval($p);
+            if ($val > 0) {
+                $ids[] = $val;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        return $ids;
     }
 
     public function get_fb_reviews($biz, $opts, $zzz = true) {

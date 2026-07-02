@@ -55,12 +55,7 @@ class Google_Dao {
                     );
                 }
 
-                $review_lang = null;
-                if (isset($review->language)) {
-                    $review_lang = ($review->language == 'en-US' ? 'en' : $review->language);
-                }
-
-                $db_review_id = empty($db_review_id) ? $this->old_review_id($db_biz_id, $review, $review_lang) : $db_review_id;
+                $db_review_id = empty($db_review_id) ? $this->old_review_id($db_biz_id, $review) : $db_review_id;
 
                 $author_img = null;
                 if (isset($review->author_img)) {
@@ -94,6 +89,11 @@ class Google_Dao {
                     $reply_time = $review->reply_time;
                 }
 
+                $review_lang = null;
+                if (isset($review->language)) {
+                    $review_lang = ($review->language == 'en-US' ? 'en' : $review->language);
+                }
+
                 if ($db_review_id) {
                     $this->update_review($place->pid, $review, $review_lang, $author_img, $images, $reply, $reply_time, $db_review_id, $log);
                 } else {
@@ -106,32 +106,23 @@ class Google_Dao {
         update_option('grw_save_log', implode('_', $log));
     }
 
-    private function old_review_id($db_biz_id, $review, $lang) {
+    private function old_review_id($db_biz_id, $review) {
         global $wpdb;
 
         $where = " WHERE";
         $where_params = array();
 
-        if (!empty($review->provider)) {
-            $where .= " platform = %s AND";
-            array_push($where_params, $review->provider);
-        }
-
         if (!empty($review->author_url)) {
             $where .= " author_url = %s";
             array_push($where_params, $review->author_url);
         } else {
-            $where .= " time = %s";
-            array_push($where_params, $review->time);
+            $where .= " time = %d";
+            array_push($where_params, $this->review_time($review));
+
             if (!empty($review->author_name)) {
                 $where .= " AND author_name = %s";
                 array_push($where_params, $review->author_name);
             }
-        }
-
-        if (!empty($lang)) {
-            $where .= " AND language = %s";
-            array_push($where_params, $lang);
         }
 
         if ($db_biz_id) {
@@ -139,7 +130,7 @@ class Google_Dao {
             array_push($where_params, $db_biz_id);
         }
 
-        $sql = "SELECT id FROM " . $wpdb->prefix . Database::REVIEW_TABLE . $where/* . " ORDER BY id DESC LIMIT 1"*/;
+        $sql = "SELECT id FROM " . $wpdb->prefix . Database::REVIEW_TABLE . $where . " ORDER BY time DESC, id DESC LIMIT 1";
         return $wpdb->get_var($wpdb->prepare($sql, $where_params));
     }
 
@@ -335,7 +326,13 @@ class Google_Dao {
     private function upsert_review_text($pid, $review, $lang) {
         global $wpdb;
 
-        if (empty($lang)) return;
+        $lang = trim((string)$lang);
+        $lang_key = strtolower($lang);
+
+        if ($lang === '' || $lang_key === 'undefined' || $lang_key === 'null') {
+            return;
+        }
+
         if (!isset($review->text) || $review->text === '') return;
         if (empty($review_id = $this->review_id($pid, $review))) return;
 
@@ -358,6 +355,17 @@ class Google_Dao {
             (empty($review->author_name) ? $time : $review->author_name . ':' . $time) :
             $review->author_url)
         );
+    }
+
+    private function review_time($review) {
+        if (!empty($review->time)) return (int)$review->time;
+
+        if (!empty($review->time_str)) {
+            $ts = strtotime($review->time_str);
+            if ($ts) return (int)$ts;
+        }
+
+        return 0;
     }
 
     private function log_last_error($wpdb) {

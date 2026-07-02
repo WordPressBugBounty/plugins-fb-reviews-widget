@@ -73,11 +73,11 @@ class Builder_Page {
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php?action=' . Post_Types::FEED_POST_TYPE . '_save')); ?>">
                 <?php wp_nonce_field(Plugin::SLG . '_wpnonce'); ?>
                 <input type="hidden" id="{slg}_post_id" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[post_id]" value="<?php echo esc_attr($feed_id); ?>">
-                <input type="hidden" id="{slg}_current_url" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[current_url]" value="<?php echo home_url($_SERVER['REQUEST_URI']); ?>">
+                <input type="hidden" id="{slg}_current_url" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[current_url]" value="<?php echo esc_url(home_url($_SERVER['REQUEST_URI'])); ?>">
                 <div class="{slg}-builder-workspace">
                     <div class="{slg}-toolbar">
                         <div class="{slg}-toolbar-title">
-                            <input id="{slg}_title" class="{slg}-toolbar-title-input" type="text" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[title]" value="<?php if (isset($feed_post_title)) { echo $feed_post_title; } ?>" placeholder="Enter a widget name" maxlength="255" autofocus>
+                            <input id="{slg}_title" class="{slg}-toolbar-title-input" type="text" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[title]" value="<?php if (isset($feed_post_title)) { echo esc_attr($feed_post_title); } ?>" placeholder="Enter a widget name" maxlength="255" autofocus>
                         </div>
                         <div class="{slg}-toolbar-control">
                             <?php if ($feed_inited) { ?>
@@ -93,7 +93,7 @@ class Builder_Page {
                         </div>
                     </div>
                     <div class="{slg}-builder-preview">
-                        <textarea id="{slg}-builder-connection" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[content]" style="display:none"><?php echo $feed_content; ?></textarea>
+                        <textarea id="{slg}-builder-connection" name="<?php echo Post_Types::FEED_POST_TYPE; ?>[content]" style="display:none"><?php echo esc_textarea($feed_content); ?></textarea>
                         <div id="{slg}_collection_preview">
                         <?php
                         if ($feed_inited) {
@@ -132,7 +132,7 @@ class Builder_Page {
                 <span id="{slg}-rate_us-feedback-stars"></span>
             </p>
             <p style="font-size:16px;">
-                <input type="text" value="<?php global $current_user; echo $current_user->user_email; ?>" placeholder="Contact email"/>
+                <input type="text" value="<?php global $current_user; echo esc_attr($current_user->user_email); ?>" placeholder="Contact email"/>
             </p>
             <p style="font-size:16px;">
                 <textarea autofocus placeholder="Describe your experience and how we can improve that"></textarea>

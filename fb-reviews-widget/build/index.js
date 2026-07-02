@@ -7,10 +7,11 @@
         bdata         = TrustreviewsBlockData;
 
     blocks.registerBlockType('fb-reviews-widget/reviews', {
-        title: __('Trust Reviews Block', 'fb-reviews-widget'),
+        apiVersion: 3,
+        title: __('Social Reviews & Recommendations Block', 'fb-reviews-widget'),
         icon: 'star-filled',
         category: 'widgets',
-        keywords: ['trust', 'reviews', 'google', 'facebook', 'yelp', 'block'],
+        keywords: ['reviews block', 'facebook reviews', 'google reviews', 'tripadvisor reviews', 'yelp reviews'],
         attributes: {id: {type: 'string'}},
 
         edit: function(props) {

@@ -1,24 +1,24 @@
-=== Reviews Widgets for Google, Yelp & TripAdvisor ===
+=== Reviews Widgets for Google, TripAdvisor, Yelp & Recommendations ===
 Contributors: widgetpack
-Tags: reviews, google reviews, facebook, tripadvisor, yelp reviews
+Tags: reviews, google reviews, facebook reviews, tripadvisor reviews, yelp reviews
 Requires PHP: 5.2
 Requires at least: 4.7
-Tested up to: 6.9
-Stable tag: 2.7.3
+Tested up to: 7.0
+Stable tag: 2.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Combine Facebook recommendations with Google, Yelp and TripAdvisor reviews in a widget, block or shortcode. Build a trusted website!
+Combine Facebook reviews and recommendations with Google, TripAdvisor and Yelp reviews in a widget, block or shortcode. Build a trusted website!
 
 == Description ==
 
-⭐ **Reviews Widgets for Google, Yelp & TripAdvisor** is a simple and powerful WordPress plugin that displays real customer reviews from major platforms (Google, Yelp & TripAdvisor) and **Facebook recommendations** into combined feed.
+⭐ **Reviews Widgets for Google, TripAdvisor, Yelp & Recommendations** is a simple and powerful WordPress plugin that displays real customer reviews from Google, TripAdvisor and Yelp, together with Facebook recommendations, in a combined feed.
 
 ---
 
-## ⭐ Unified feed — Google + Facebook + Yelp + TripAdvisor together!
+## ⭐ Unified feed — Facebook + Google + TripAdvisor + Yelp together!
 
-📌 This plugin brings together reviews from **Facebook Recommendations**, **Google**, **Yelp**, and **TripAdvisor** into a single combined feed.
+📌 This plugin brings together reviews from **Facebook Recommendations**, **Google**, **TripAdvisor** and **Yelp** into a single combined feed.
 📌 You no longer need separate plugins for each platform — everything is managed in one place using one widget, one shortcode and one settings panel.
 📌 This reduces setup time, avoids plugin conflicts and keeps your site lighter and easier to manage.
 
@@ -26,9 +26,9 @@ Combine Facebook recommendations with Google, Yelp and TripAdvisor reviews in a 
 
 ## ⭐ Unlimited business locations & unlimited widgets
 
-📍 **Unlimited locations** — connect any number of Google places, Yelp listings or Facebook Pages.
+📍 **Unlimited locations** — connect any number of Google places, TripAdvisor listings, Yelp listings or Facebook Pages.
 🗂️ **Unlimited widgets** — each widget can use its own layout and source selection.
-🔧 Each widget can display a different location, different platform or any custom combination of Google, Yelp or Facebook sources.
+🔧 Each widget can display a different location, different platform or any custom combination of Google, TripAdvisor, Yelp and Facebook recommendations.
 
 There are no limits on:
 - number of locations
@@ -40,7 +40,7 @@ There are no limits on:
 
 ## ⭐ API usage & platform limitations
 
-This plugin uses the official Facebook Graph API to show **all recommendations** and requires an owner rights to the FB page. It displays up to **10 Google reviews** and **3 Yelp reviews** at the first install and can **collect it daily to show more reviews**.
+This plugin uses the official Facebook Graph API to show **all recommendations** and requires owner/admin rights to the Facebook Page. It displays up to **10 Google reviews**, available **TripAdvisor reviews** and **3 Yelp reviews** at the first install and can collect more reviews over time.
 
 ---
 
@@ -90,15 +90,16 @@ Suitable for sidebars, landing pages, homepage sections, footers and full-width 
 
 ## ⭐ Sources & review limits
 
-- **Google** — up to 10 reviews via public API, more synced manually every 3 days using the “Refresh” option
-- **Yelp** — up to 3 reviews via public API, more synced manually every 3 days using the “Refresh” option
 - **Facebook** — all Recommendations available through the official Graph API (no limits)
+- **Google** — up to 10 reviews via public API, more synced manually every 3 days using the “Refresh” option
+- **TripAdvisor** — displays available TripAdvisor reviews supported by the connection source
+- **Yelp** — up to 3 reviews via public API, more synced manually every 3 days using the “Refresh” option
 
 ---
 
 == Features ==
 
-• Display Google reviews, Yelp reviews & Facebook Recommendations
+• Display Google, TripAdvisor, Yelp and Facebook recommendations
 • Unified feed — combine all platforms into one widget
 • Unlimited business locations
 • Unlimited widgets and shortcodes
@@ -128,9 +129,9 @@ Suitable for sidebars, landing pages, homepage sections, footers and full-width 
 == Installation ==
 
 1. Upload plugin files to `/wp-content/plugins/` or install via the Plugins screen.
-2. Activate **Reviews Widgets for Google, Yelp & TripAdvisor**.
+2. Activate **Reviews Widgets for Google, TripAdvisor, Yelp & Recommendations**.
 3. Go to **Social Reviews** in wp-admin.
-4. Connect your Google, Yelp and Facebook pages.
+4. Connect your Google places, TripAdvisor listings, Yelp listings and Facebook Pages.
 5. Add the widget, shortcode or block anywhere.
 
 ---
@@ -166,7 +167,7 @@ List, grid and slider (carousel).
 
 ### ❓ Can I combine different platforms into one feed?
 
-Yes — Google + Yelp + Facebook in any combination.
+Yes — Google + Facebook + TripAdvisor + Yelp in any combination.
 
 ### ❓ Do I need a Facebook app?
 
@@ -188,6 +189,16 @@ Only for “Read more”, slider and pagination.
 ---
 
 == Changelog ==
+
+= 2.8 =
+* Security fixes: added output escaping across the widget, shortcode and builder.
+* Fixed a database collation mismatch issue that could prevent reviews from loading on some installations.
+* Improved compatibility with multilingual review text storage for existing installations.
+* Fixed review rendering when reviewer avatars are hidden.
+* Improved handling of missing or unavailable connected review sources.
+* Minor hardening and stability improvements.
+* Tested and updated for WordPress 7.0.
+
 
 = 2.7.3 =
 * Improved asset loading by adding version to file path URLs

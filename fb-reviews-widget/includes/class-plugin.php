@@ -17,7 +17,7 @@ use WP_TrustReviews\Includes\Core\Database;
 
 final class Plugin {
 
-    const VER = '2.7.3';
+    const VER = '2.8';
     const SLG = 'trustreviews';
     const PFX = self::SLG . '_';
     const NAME = 'fb-reviews-widget';

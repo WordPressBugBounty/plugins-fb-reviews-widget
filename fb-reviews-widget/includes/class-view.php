@@ -23,17 +23,17 @@ class View {
         }
 
         $style = '';
-        if (isset($max_width) && strlen($max_width) > 0) {
+        if (!empty($max_width)) {
             $style .= 'width:' . $max_width . '!important;';
         }
-        if (isset($max_height) && strlen($max_height) > 0) {
+        if (!empty($max_height)) {
             $style .= 'height:' . $max_height . '!important;overflow-y:auto!important;';
         }
         if ($options->centered) {
             $style .= 'margin:0 auto!important;';
         }
 
-        ?><div class="{slg}<?php if ($options->dark_theme) { ?> wp-dark<?php } ?>"<?php if ($style) { ?> style="<?php echo $style;?>"<?php } ?> data-id="<?php echo $feed_id; ?>" data-layout="<?php echo $options->view_mode; ?>" data-exec="false"><?php
+        ?><div class="{slg}<?php if ($options->dark_theme) { ?> wp-dark<?php } ?>"<?php if ($style) { ?> style="<?php echo esc_attr($style);?>"<?php } ?> data-id="<?php echo esc_attr($feed_id); ?>" data-layout="<?php echo esc_attr($options->view_mode); ?>" data-exec="false"><?php
             switch ($options->view_mode) {
                 case 'slider':
                     $this->render_slider($businesses, $reviews, $options, $is_admin);
@@ -146,7 +146,7 @@ class View {
                         ?>
                     </div>
                     <?php if ($options->pagination > 0 && $hr) { ?>
-                    <a class="{slg}-url" href="#" onclick="return TrustReviews.Plugin.next.call(this, '{slg}', <?php echo $options->pagination; ?>);">
+                    <a class="{slg}-url" href="#" onclick="return TrustReviews.Plugin.next.call(this, '{slg}', <?php echo (int) $options->pagination; ?>);">
                         <?php echo __('More Reviews', Plugin::NAME); ?>
                     </a>
                     <?php } ?>
@@ -187,7 +187,7 @@ class View {
         <?php if (!$options->header_hide_photo) { ?>
         <img src="<?php echo esc_url($place_img); ?>" class="{slg}-img" alt="<?php echo esc_attr($place->name); ?>" width="50" height="50" title="<?php echo esc_attr($place->name); ?>">
         <?php } ?>
-        <div class="{slg}-flex" data-platform="<?php echo $place->provider; ?>" style="--dir:column;--gap:8px">
+        <div class="{slg}-flex" data-platform="<?php echo esc_attr($place->provider); ?>" style="--dir:column;--gap:8px">
             <?php if (!$options->header_hide_name) { ?>
             <div class="{slg}-name">
                 <?php $place_name_content = '<span>' . $place->name . '</span>';
@@ -235,7 +235,7 @@ class View {
             }
         }
         if ($options->pagination > 0 && $hr) { ?>
-        <a class="{slg}-url" href="#" onclick="return TrustReviews.Plugin.next.call(this, '{slg}', <?php echo $options->pagination; ?>);">
+        <a class="{slg}-url" href="#" onclick="return TrustReviews.Plugin.next.call(this, '{slg}', <?php echo (int) $options->pagination; ?>);">
             <?php echo __('More Reviews', Plugin::NAME); ?>
         </a>
         <?php
@@ -247,34 +247,25 @@ class View {
 
     function place_review($review, $hr, $options, $is_admin = false) {
         $addcls = $is_admin && $review->hide != '' ? " wp-review-hidden" : "";
-        ?>
-        <div class="{slg}-list-review<?php echo $addcls; ?><?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo $review->provider; ?>">
-            <?php if (!$options->hide_avatar) { ?>
-            <div class="{slg}-flex" style="--dir:row;--align:star;--gap:12px">
-                <?php
-                $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
-                if (strlen($review->author_img) > 0) {
-                    $author_img = $review->author_img;
-                } else {
-                    $author_img = $default_avatar;
+        ?><div class="{slg}-list-review<?php echo $addcls; ?><?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo esc_attr($review->provider); ?>">
+            <div class="{slg}-flex" style="--dir:row;--align:star;--gap:12px"><?php
+                if (!$options->hide_avatar) {
+                    $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
+                    $author_img = empty($review->author_img) ? $default_avatar : $review->author_img;
+                    if (isset($options->reviewer_avatar_size)) {
+                        $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
+                        $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
+                    }
+                    $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
                 }
-                if (isset($options->reviewer_avatar_size)) {
-                    $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
-                    $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
-                }
-                $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
-                ?>
-                <div class="{slg}-flex" style="--dir:column;--align:star;--gap:4px">
+                ?><div class="{slg}-flex" style="--dir:column;--align:star;--gap:4px">
                     <?php
-                    if (strlen($review->author_url) > 0) {
-                        $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
+                    if (empty($review->author_url)) {
+                        $author_name = empty($review->author_name) ? __('Google User', Plugin::NAME) : $review->author_name;
+                        ?><div class="{slg}-name"><?php echo esc_html($author_name); ?></div><?php
+
                     } else {
-                        if (strlen($review->author_name) > 0) {
-                            $author_name = $review->author_name;
-                        } else {
-                            $author_name = __('Google User', Plugin::NAME);
-                        }
-                        ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
+                        $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
                     }
                     ?>
                     <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo esc_html(gmdate("H:i d M y", (int)$review->time)); ?></div>
@@ -284,12 +275,10 @@ class View {
                     </div>
                     <?php if ($is_admin && !empty($review->id)) {
                         echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
-                    } ?>
-                </div>
+                    }
+                ?></div>
             </div>
-            <?php } ?>
-        </div>
-        <?php
+        </div><?php
     }
 
     function slider_review($review, $hr, $options, $is_admin = false) {
@@ -297,61 +286,53 @@ class View {
         $addcls .= $options->show_round ? " {slg}-round" : "";
         $addcls .= $options->show_shadow ? " {slg}-shadow" : "";
         $addcls .= $is_admin && $review->hide != '' ? " wp-review-hidden" : "";
-        ?>
-        <div class="{slg}-review<?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo $review->provider; ?>">
+        ?><div class="{slg}-review<?php if ($hr) { echo ' {slg}-hide'; } ?>" data-rev="<?php echo esc_attr($review->provider); ?>">
             <div class="{slg}-review-inner<?php echo $addcls; ?>">
-                <div class="{slg}-flex" style="--gap:12px;--dir:row;--align:center">
-                    <?php
-                    // Google reviewer avatar
-                    $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
-                    if (strlen($review->author_img) > 0) {
-                        $author_img = $review->author_img;
-                    } else {
-                        $author_img = $default_avatar;
+                <div class="{slg}-flex" style="--gap:12px;--dir:row;--align:center"><?php
+                    if (!$options->hide_avatar) {
+                        $default_avatar = Plugin::ASSETS_URL() . 'img/guest.png';
+                        $author_img = empty($review->author_img) ? $default_avatar : $review->author_img;
+                        if (isset($options->reviewer_avatar_size)) {
+                            $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
+                            $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
+                        }
+                        $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
                     }
-                    if (isset($options->reviewer_avatar_size)) {
-                        $author_img = str_replace('s128', 's' . $options->reviewer_avatar_size, $author_img);
-                        $default_avatar = str_replace('s128', 's' . $options->reviewer_avatar_size, $default_avatar);
-                    }
-                    $this->image($author_img, '{slg}-img', $review->author_name, $options->lazy_load_img, $default_avatar);
                     ?><div class="{slg}-flex" style="--gap:6px;--dir:column;--align:star;--overflow:hidden"><?php
                         // Google reviewer name
-                        if (strlen($review->author_url) > 0) {
-                            $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
+                        if (empty($review->author_url)) {
+                            $author_name = empty($review->author_name) ? __('Google User', Plugin::NAME) : $review->author_name;
+                            ?><div class="{slg}-name"><?php echo esc_html($author_name); ?></div><?php
                         } else {
-                            if (strlen($review->author_name) > 0) {
-                                $author_name = $review->author_name;
-                            } else {
-                                $author_name = __('Google User', Plugin::NAME);
-                            }
-                            ?><div class="{slg}-name"><?php echo $author_name; ?></div><?php
+                            $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
                         }
-                        ?>
-                        <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo esc_html(gmdate("H:i d M y", (int)$review->time)); ?></div>
+                        ?><div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php
+                            echo esc_html(gmdate("H:i d M y", (int)$review->time));
+                        ?></div>
                     </div>
-                </div>
-                <?php echo $this->stars($review->rating, $review->provider); ?>
-                <div>
-                    <div class="{slg}-feedback" <?php if (strlen($options->slider_text_height) > 0) {?> style="height:<?php echo $options->slider_text_height; ?>!important"<?php } ?>>
-                        <?php if (strlen($review->text) > 0) { ?>
+                </div><?php
+
+                echo $this->stars($review->rating, $review->provider);
+
+                ?><div>
+                    <div class="{slg}-feedback" <?php if (!empty($options->slider_text_height)) {?> style="height:<?php echo esc_attr($options->slider_text_height); ?>!important"<?php } ?>>
+                        <?php if (!empty($review->text)) { ?>
                         <span class="{slg}-text"><?php echo $this->trim_text($review->text, $options->text_size); ?></span>
                         <?php } ?>
                     </div>
-                </div>
-                <?php $this->social_logo($review->provider);
+                </div><?php $this->social_logo($review->provider);
                 if ($is_admin && isset($review->id)) {
                     echo '<a href="#" class="wp-review-hide" data-id=' . $review->id . '>' . ($review->hide == '' ? 'Hide' : 'Show') . ' review</a>';
-                } ?>
-            </div>
-        </div>
-        <?php
+                }
+            ?></div>
+        </div><?php
     }
 
     function stars($rating, $provider = '', $show_rating = false) {
         switch ($provider) {
             case 'facebook':
                 if ($show_rating) {
-                    ?><span class="rpi-stars" style="--rating:<?php echo $rating; ?>"><?php echo $rating; ?></span><?php
+                    ?><span class="rpi-stars" style="--rating:<?php echo esc_attr($rating); ?>"><?php echo $rating; ?></span><?php
                 } else {
                     $text = ($rating < 2 ? "doesn't" : "") . ' recommends';
                     ?><span class="rpi-star-fb" data-rating="<?php echo $rating; ?>"><?php echo $text; ?></span><?php
@@ -364,18 +345,16 @@ class View {
                 ?><span class="rpi-stars-<?php echo $provider; ?>"<?php echo $data_atts; ?>><i></i><i></i><i></i><i></i><i></i></span><?php
                 break;
             default:
-                ?><span class="rpi-stars" style="--rating:<?php echo $rating; ?>"><?php if ($show_rating) echo $rating; ?></span><?php
+                ?><span class="rpi-stars" style="--rating:<?php echo esc_attr($rating); ?>"><?php if ($show_rating) echo $rating; ?></span><?php
         }
     }
 
     private function writereview_url($biz) {
         switch ($biz->provider) {
-            case 'google':
-                return 'https://search.google.com/local/writereview?placeid=' . $biz->id;
-            case 'facebook':
-                return 'https://facebook.com/' . $biz->id . '/reviews';
-            case 'yelp':
-                return 'https://www.yelp.com/writeareview/biz/' . $biz->id;
+            case 'google':      return 'https://search.google.com/local/writereview?placeid=' . $biz->id;
+            case 'facebook':    return 'https://facebook.com/' . $biz->id . '/reviews';
+            case 'tripadvisor': return 'https://www.tripadvisor.com/UserReview-d' . $biz->id;
+            case 'yelp':        return 'https://www.yelp.com/writeareview/biz/' . $biz->id;
         }
     }
 
@@ -405,7 +384,7 @@ class View {
     }
 
     private function powered($biz, $opt) {
-        ?><div class="{slg}-powered {slg}-flex" data-platform="<?php echo $biz->provider; ?>" style="--gap: 2px;--dir:row;--align:center"><?php
+        ?><div class="{slg}-powered {slg}-flex" data-platform="<?php echo esc_attr($biz->provider); ?>" style="--gap: 2px;--dir:row;--align:center"><?php
         switch ($biz->provider) {
             case 'google':
                 ?><img src="<?php echo Plugin::ASSETS_URL(); ?>img/powered_by_google_on_<?php if ($opt->dark_theme) { ?>non_<?php } ?>white.png" alt="powered by Google" width="144" height="18" title="powered by Google"><?php
@@ -431,12 +410,12 @@ class View {
         echo '<a href="' . $href . '"' . $class_attr . $target_rel . $rel_attr . '>' . wp_kses_post($text) . '</a>';
     }
 
-    function image($src, $cls = '', $alt, $lazy, $def_ava = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', $atts = '') {
+    function image($src, $cls, $alt, $lazy, $def_ava = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7', $atts = '') {
         ?><img src="<?php echo esc_url($src); ?>" <?php if ($lazy) { ?>loading="lazy"<?php } ?> class="<?php echo esc_attr($cls); ?>" alt="<?php echo esc_attr($alt); ?>" onerror="this.onerror=null;this.src='<?php echo esc_url($def_ava); ?>';" <?php echo $atts; ?>><?php
     }
 
     function js_loader($cls, $func, $data = '') {
-        ?><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="js_loader" onload="(function(el, data) {var f = function() { window.<?php echo $cls; ?> ? <?php echo $cls . '.' . $func; ?>('{slg}', el, data) : setTimeout(f, 400) }; f() })(this<?php if (strlen($data) > 0) { ?>, <?php echo str_replace('"', '\'', $data); } ?>);" width="1" height="1" style="display:none"><?php
+        ?><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="js_loader" onload="(function(el, data) {var f = function() { window.<?php echo $cls; ?> ? <?php echo $cls . '.' . $func; ?>('{slg}', el, data) : setTimeout(f, 400) }; f() })(this<?php if (!empty($data)) { ?>, <?php echo str_replace('"', '\'', $data); } ?>);" width="1" height="1" style="display:none"><?php
     }
 
     function trim_text($text, $size) {

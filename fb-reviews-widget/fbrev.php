@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: Reviews Widgets for Google, Yelp & TripAdvisor
+Plugin Name: Reviews Widgets for Google, TripAdvisor, Yelp & Recommendations
 Plugin URI: https://wordpress.org/plugins/fb-reviews-widget
-Description: Combine Facebook recommendations with Google, Yelp and TripAdvisor reviews in a widget, block or shortcode. Build a trusted website!
-Version: 2.7.3
+Description: Combine Facebook reviews and recommendations with Google, TripAdvisor and Yelp reviews in a widget, block or shortcode. Build a trusted website!
+Version: 2.8
 Author: Trust.Reviews <support@trust.reviews>
 Author URI: https://trust.reviews
 Text Domain: fb-reviews-widget
