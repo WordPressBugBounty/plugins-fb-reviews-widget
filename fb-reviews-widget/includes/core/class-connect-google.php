@@ -79,7 +79,7 @@ class Connect_Google {
         );
 
         if (!isset($_POST['_wpnonce'])) {
-            $response['error'] = __('Unable to call request. Make sure you are accessing this page from the Wordpress dashboard.', Plugin::NAME);
+            $response['error'] = array('message' => __('Unable to call request. Make sure you are accessing this page from the Wordpress dashboard.', Plugin::NAME));
             wp_send_json($response);
         }
 
@@ -95,27 +95,32 @@ class Connect_Google {
         $google_api_key = get_option(Plugin::SLG . '_google_api_key');
         $lang = sanitize_text_field(wp_unslash($_POST['lang']));
         $local_img = sanitize_text_field(wp_unslash($_POST['local_img']));
+        $id = isset($_POST['id']) ? sanitize_text_field(wp_unslash($_POST['id'])) : '';
+        $map_url = isset($_POST['map_url']) ? wp_unslash($_POST['map_url']) : '';
 
-        if ($google_api_key && strlen($google_api_key) > 0) {
-            $id = sanitize_text_field(wp_unslash($_POST['id']));
+        // The connector posts Yelp and TripAdvisor as 'google' too, and a first connect carries no place id
+        $use_key = $google_api_key && strlen($id) > 0 && !preg_match('/yelp\.|tripadvisor\./i', $map_url);
+
+        if ($use_key) {
             $url = $this->api_url($id, $google_api_key, $lang);
             $res = wp_remote_get($url);
         } else {
-            $params = array(
-                'url' => isset($_POST['map_url']) ? wp_unslash($_POST['map_url']) : '',
-            );
+            $params = array('url' => $map_url);
 
             if (!empty($lang)) {
                 $params['lang'] = $lang;
             }
 
-            $res = wp_remote_post('https://app.trustembed.com/connect/reviews', array(
-                'body' => $params
-            ));
+            $app_url = 'https://app.trustembed.com/connect/reviews';
+            if ($this->is_playground()) {
+                $res = wp_remote_get(add_query_arg(rawurlencode_deep($params), $app_url), array('timeout' => 25));
+            } else {
+                $res = wp_remote_post($app_url, array('body' => $params, 'timeout' => 25));
+            }
         }
 
         if (is_wp_error($res)) {
-            $response['error'] = $res->get_error_message();
+            $response['error'] = array('message' => $res->get_error_message());
             wp_send_json($response);
         }
 
@@ -123,15 +128,20 @@ class Connect_Google {
         $body_json = json_decode($body);
 
         if (!$body_json) {
-            $response['error'] = 'Invalid JSON response';
+            $response['error'] = array('message' => 'Invalid JSON response');
             wp_send_json($response);
         }
 
-        $response['error'] = isset($body_json->error) ? $body_json->error : null;
+        if (!empty($body_json->error)) {
+            $error = $body_json->error;
+            $response['error'] = !empty($error->message) ? $error : array('message' => isset($body_json->message) ? $body_json->message : (is_string($error) ? $error : 'Request failed'));
+        } elseif (!isset($body_json->result)) {
+            $response['error'] = array('message' => isset($body_json->error_message) ? $body_json->error_message : 'Request failed');
+        }
         $response['quota'] = isset($body_json->quota) ? $body_json->quota : null;
 
         if (isset($body_json->result)) {
-            if ($google_api_key && strlen($google_api_key) > 0) {
+            if ($use_key) {
                 $photo = $this->business_avatar($body_json->result, $google_api_key);
                 $body_json->result->business_photo = $photo;
             }
@@ -513,4 +523,21 @@ class Connect_Google {
         return $upload['url'];
     }*/
 
+    private function is_playground() {
+        if (isset($_SERVER['SERVER_SOFTWARE']) && stripos(sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])), 'PHP.wasm') !== false) {
+            return true;
+        }
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $host = sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST']));
+            if (stripos($host, 'playground.wordpress.net') !== false
+                || stripos($host, '.wasm.wordpress.net') !== false
+                || stripos($host, 'playground.test') !== false) {
+                return true;
+            }
+        }
+        if (defined('WP_PLAYGROUND') && WP_PLAYGROUND) {
+            return true;
+        }
+        return false;
+    }
 }

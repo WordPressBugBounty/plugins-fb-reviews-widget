@@ -1,10 +1,10 @@
 === Reviews Widgets for Google, TripAdvisor, Yelp & Recommendations ===
 Contributors: widgetpack
 Tags: reviews, google reviews, facebook reviews, tripadvisor reviews, yelp reviews
-Requires PHP: 5.2
-Requires at least: 4.7
-Tested up to: 7.0
-Stable tag: 2.8
+Requires PHP: 7.0
+Requires at least: 6.0
+Tested up to: 7.1
+Stable tag: 2.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -190,6 +190,22 @@ Only for “Read more”, slider and pagination.
 
 == Changelog ==
 
+= 2.9 =
+* Reviews can now be connected in WordPress Playground.
+* The connection wizard pre-selects the review language from the place's country.
+* Keyboard focus is now visible on the review button and on reviewer names.
+* The slider arrows and 'read more' now work from the keyboard.
+* Screen readers now announce star ratings.
+* The 'Reviews count adder' connection option now accepts negative values, for pages where Facebook returns more reviews than the page itself shows.
+* Review texts, reviewer names and place names are always shown as plain text.
+* Fixed the reviews count showing a wrong tiny number (such as 1 above a list of dozens of reviews) when Facebook reports an incorrect count for the page - the number of actually loaded reviews now takes precedence.
+* Fixed connecting TripAdvisor reviews.
+* Fixed connecting Yelp and TripAdvisor places when a Google API key is saved.
+* Fixed 'read more' when a Google reviews widget is on the same page.
+* Connection errors are now shown in the builder, and the Save & Update button stays active after a failed connection.
+* Longer timeout for connecting reviews on slow hosts.
+* Tested and updated to WordPress 7.1.
+
 = 2.8 =
 * Security fixes: added output escaping across the widget, shortcode and builder.
 * Fixed a database collation mismatch issue that could prevent reviews from loading on some installations.
@@ -198,7 +214,6 @@ Only for “Read more”, slider and pagination.
 * Improved handling of missing or unavailable connected review sources.
 * Minor hardening and stability improvements.
 * Tested and updated for WordPress 7.0.
-
 
 = 2.7.3 =
 * Improved asset loading by adding version to file path URLs

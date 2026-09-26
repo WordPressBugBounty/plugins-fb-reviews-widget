@@ -442,8 +442,12 @@ TrustReviews.Builder = function($, data) {
                 }, authcode);
                 serialize_connections();
                 msg.push(`${params.event === 'refresh' ? 'Reviews updated' : 'Widget saved'} successfully.`);
-            } else if (res.quota?.remaining < 1) {
-                msg.push(`Request limit reached. Please try after ${formatResetTime(res.quota.reset_in_seconds)}.`);
+            } else {
+                el('save').innerText = 'Save & Update';
+                el('save').disabled = false;
+                if (res.quota?.remaining < 1) {
+                    msg.push(`Request limit reached. Please try after ${formatResetTime(res.quota.reset_in_seconds)}.`);
+                }
             }
 
 

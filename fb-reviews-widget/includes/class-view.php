@@ -96,7 +96,7 @@ class View {
                     </div>
                     <?php } ?>
                 </div>
-                <?php if (!$options->slider_hide_dots) { ?><div class="{slg}-dots"></div><?php } ?>
+                <?php if (!$options->slider_hide_dots) { ?><div class="{slg}-dots" aria-hidden="true"></div><?php } ?>
             </div>
             <?php } ?>
         </div>
@@ -190,7 +190,7 @@ class View {
         <div class="{slg}-flex" data-platform="<?php echo esc_attr($place->provider); ?>" style="--dir:column;--gap:8px">
             <?php if (!$options->header_hide_name) { ?>
             <div class="{slg}-name">
-                <?php $place_name_content = '<span>' . $place->name . '</span>';
+                <?php $place_name_content = '<span>' . esc_html($place->name) . '</span>';
                 echo $this->anchor($place->url, '', $place_name_content, $options->open_link, $options->nofollow_link); ?>
             </div>
             <?php } ?>
@@ -265,7 +265,7 @@ class View {
                         ?><div class="{slg}-name"><?php echo esc_html($author_name); ?></div><?php
 
                     } else {
-                        $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
+                        $this->anchor($review->author_url, '{slg}-name', esc_html($review->author_name), $options->open_link, $options->nofollow_link);
                     }
                     ?>
                     <div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php echo esc_html(gmdate("H:i d M y", (int)$review->time)); ?></div>
@@ -304,7 +304,7 @@ class View {
                             $author_name = empty($review->author_name) ? __('Google User', Plugin::NAME) : $review->author_name;
                             ?><div class="{slg}-name"><?php echo esc_html($author_name); ?></div><?php
                         } else {
-                            $this->anchor($review->author_url, '{slg}-name', $review->author_name, $options->open_link, $options->nofollow_link);
+                            $this->anchor($review->author_url, '{slg}-name', esc_html($review->author_name), $options->open_link, $options->nofollow_link);
                         }
                         ?><div class="{slg}-time" data-time="<?php echo $review->time; ?>"><?php
                             echo esc_html(gmdate("H:i d M y", (int)$review->time));
@@ -329,6 +329,8 @@ class View {
     }
 
     function stars($rating, $provider = '', $show_rating = false) {
+        /* translators: %s: rating value, e.g. 4.5 */
+        $label = $show_rating ? '' : ' role="img" aria-label="' . esc_attr(sprintf(__('Rating: %s out of 5', 'fb-reviews-widget'), $rating)) . '"';
         switch ($provider) {
             case 'facebook':
                 if ($show_rating) {
@@ -342,10 +344,10 @@ class View {
             case 'tripadvisor':
                 $data_atts = ' data-stars="' . floor($rating * 2) / 2 . '"';
                 $data_atts .= $show_rating ? ' data-rating="' . $rating . '"' : '';
-                ?><span class="rpi-stars-<?php echo $provider; ?>"<?php echo $data_atts; ?>><i></i><i></i><i></i><i></i><i></i></span><?php
+                ?><span class="rpi-stars-<?php echo $provider; ?>"<?php echo $data_atts . $label; ?>><i></i><i></i><i></i><i></i><i></i></span><?php
                 break;
             default:
-                ?><span class="rpi-stars" style="--rating:<?php echo esc_attr($rating); ?>"><?php if ($show_rating) echo $rating; ?></span><?php
+                ?><span class="rpi-stars"<?php echo $label; ?> style="--rating:<?php echo esc_attr($rating); ?>"><?php if ($show_rating) echo $rating; ?></span><?php
         }
     }
 
@@ -419,6 +421,8 @@ class View {
     }
 
     function trim_text($text, $size) {
+        // The connector backend sends Google line breaks as <br>
+        $text = preg_replace('/<br\s*\/?>/i', "\n", (string) $text);
         if ($size > 0 && $this->strlen($text) > $size) {
             $sub_text = $this->substr($text, 0, $size);
             $idx = $this->strrpos($sub_text, ' ') + 1;
@@ -430,12 +434,12 @@ class View {
                 $visible_text = $this->substr($text, 0, $idx - 1);
                 $invisible_text = $this->substr($text, $idx - 1, $this->strlen($text));
             }
-            echo wp_kses_post(balanceTags($visible_text, true));
+            echo nl2br(esc_html($visible_text));
             if ($this->strlen($invisible_text) > 0) {
-                ?><span>... </span><span class="wp-more"><?php echo wp_kses_post(balanceTags($invisible_text, true)); ?></span><span class="wp-more-toggle"><?php echo __('read more', Plugin::NAME); ?></span><?php
+                ?><span>... </span><span class="wp-more"><?php echo nl2br(esc_html($invisible_text)); ?></span><span class="wp-more-toggle"><?php echo __('read more', Plugin::NAME); ?></span><?php
             }
         } else {
-            echo wp_kses_post(balanceTags($text, true));
+            echo nl2br(esc_html($text));
         }
     }
 

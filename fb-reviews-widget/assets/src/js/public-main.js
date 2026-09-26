@@ -48,16 +48,41 @@ TrustReviews.Plugin = {
     },
 
     read_more: function() {
-        var read_more = document.querySelectorAll('.wp-more-toggle');
+        // The Google reviews plugin uses the same class, and every widget init walks the whole page.
+        var read_more = document.querySelectorAll('.' + TrustReviews.slg + ' .wp-more-toggle');
         for (var i = 0; i < read_more.length; i++) {
             (function(rm) {
+            if (rm.onclick) return;
             rm.onclick = function() {
-                rm.parentNode.removeChild(rm.previousSibling.previousSibling);
+                var text = rm.parentNode, keys = false;
+                try { keys = rm.matches(':focus-visible'); } catch (e) {}
+                text.removeChild(rm.previousSibling.previousSibling);
                 rm.previousSibling.className = '';
                 rm.textContent = '';
+                rm.removeAttribute('role');
+                rm.removeAttribute('tabindex');
+                // Only after a key press: moving focus after a click would let themes paint their :focus rings.
+                if (keys) {
+                    text.tabIndex = -1;
+                    text.addEventListener('blur', function() { text.removeAttribute('tabindex'); }, {once: true});
+                    text.focus({preventScroll: true});
+                }
             };
+            TrustReviews.Plugin.btn(rm);
             })(read_more[i]);
         }
+    },
+
+    btn: function(el, label) {
+        el.setAttribute('role', 'button');
+        el.tabIndex = 0;
+        if (label) el.setAttribute('aria-label', label);
+        el.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                el.click();
+            }
+        });
     },
 
     get_parent: function(el, cl) {
@@ -219,6 +244,7 @@ TrustReviews.Plugin = {
                     clearInterval(swipeTimout);
                 }
             };
+            TrustReviews.Plugin.btn(prev, 'Previous reviews');
         }
 
         var next = el('next');
@@ -229,6 +255,7 @@ TrustReviews.Plugin = {
                     clearInterval(swipeTimout);
                 }
             };
+            TrustReviews.Plugin.btn(next, 'Next reviews');
         }
 
         function swipe() {

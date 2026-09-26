@@ -51,6 +51,16 @@ $slg: trustreviews;
     outline-offset: 2px;
 }
 
+/* A mouse click focuses these as well; only keyboard focus may draw a ring. */
+.#{$slg} .#{$slg}-btns:where(:not(:focus-visible)),
+.#{$slg} .wp-more-toggle:where(:not(:focus-visible)) {
+    outline: none !important;
+}
+
+.#{$slg} .wp-more-toggle:focus-visible {
+    outline: 2px solid currentColor;
+}
+
 .#{$slg} img {
     display: block;
     max-width: 100%;
@@ -186,6 +196,11 @@ $slg: trustreviews;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
+}
+
+/* The name column clips overflow (--overflow:hidden in the view), so a ring drawn outside would be cut off. */
+.#{$slg} .#{$slg}-review a.#{$slg}-name:focus-visible {
+    outline-offset: -2px;
 }
 
 .#{$slg} a.#{$slg}-name {
@@ -537,7 +552,6 @@ $slg: trustreviews;
 .#{$slg} .#{$slg}-wr a {
     color: #fff !important;
     padding: 4px 12px 8px !important;
-    outline: none !important;
     border-radius: 27px !important;
     background: #0a6cff !important;
     white-space: nowrap !important;
@@ -545,6 +559,15 @@ $slg: trustreviews;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.24) !important;
     user-select: none !important;
     transition: all 0.2s ease-in-out !important;
+}
+
+/* :where() adds no specificity: themes that override the button override this too. */
+.#{$slg} .#{$slg}-wr a:where(:not(:focus-visible)) {
+    outline: none !important;
+}
+
+.#{$slg} .#{$slg}-wr a:focus-visible {
+    outline-offset: -4px;
 }
 
 .#{$slg} .#{$slg}-wr a:hover {

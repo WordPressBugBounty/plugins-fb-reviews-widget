@@ -370,11 +370,16 @@ class Core {
         if (isset($json->overall_star_rating)) {
             $fb_rating = number_format((float)$json->overall_star_rating, 1, '.', '');
         }
-        if (isset($json->rating_count) && $json->rating_count > 0) {
+        // Only when it beats the delivered set: Graph's rating_count is often a
+        // junk 1-9 while dozens of reviews were actually returned.
+        if (isset($json->rating_count) && $json->rating_count > $fb_count) {
             $fb_count = $json->rating_count;
         }
-        if (isset($biz->rating_count) && $biz->rating_count > 0) {
-            $fb_count += $biz->rating_count;
+        // A negative adder is meaningful: the ratings edge can return more
+        // reviews than the page itself shows.
+        $rating_count_add = isset($biz->rating_count) ? (int) $biz->rating_count : 0;
+        if ($rating_count_add) {
+            $fb_count = max(0, $fb_count + $rating_count_add);
         }
 
         $business = json_decode(json_encode(
