@@ -57,6 +57,10 @@ class Builder_Page {
             $feed_id = $feed->ID;
             $feed_post_title = $feed->post_title;
             $feed_content = trim($feed->post_content);
+            // The page is open to edit_posts; a connection made with a page token keeps it, and only admins may see it.
+            if (!current_user_can('manage_options')) {
+                $feed_content = self::without_tokens($feed_content);
+            }
 
             $data = $this->core->get_reviews($feed, true);
             $businesses = $data['businesses'];
@@ -165,7 +169,7 @@ class Builder_Page {
                         slg        : '<?php echo Plugin::SLG; ?>',
                         opt_el     : '#{slg}-builder-option',
                         lang       : '<?php echo get_locale(); ?>',
-                        authcode   : '<?php echo get_option(Plugin::SLG . '_auth_code'); ?>',
+                        authcode   : '<?php echo current_user_can('manage_options') ? esc_js(get_option(Plugin::SLG . '_auth_code')) : ''; ?>',
                         fbAppUrl   : '<?php echo Plugin::FB_APP_URL; ?>',
                         fbAuthUrl  : '<?php echo Plugin::FB_AUTH_URL; ?>',
                         gAppUrl    : '<?php echo Plugin::G_APP_URL; ?>',
@@ -182,5 +186,18 @@ class Builder_Page {
         <?php
         $this->view->render_svg();
         echo preg_replace('/{slg}/', Plugin::SLG, ob_get_clean());
+    }
+
+    private static function without_tokens($content) {
+        $json = json_decode($content);
+        if (!is_object($json)) {
+            return '';
+        }
+        foreach (isset($json->connections) && is_array($json->connections) ? $json->connections : array() as $conn) {
+            if (is_object($conn)) {
+                unset($conn->access_token);
+            }
+        }
+        return wp_json_encode($json, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 }

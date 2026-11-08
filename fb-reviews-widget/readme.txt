@@ -4,7 +4,7 @@ Tags: reviews, google reviews, facebook reviews, tripadvisor reviews, yelp revie
 Requires PHP: 7.0
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 2.9
+Stable tag: 2.9.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -189,6 +189,12 @@ Only for “Read more”, slider and pagination.
 ---
 
 == Changelog ==
+
+= 2.9.1 =
+* Change: a place connected in several languages shows each review once, in the site language when the place is connected in it, otherwise in the first connection's language.
+* Fixed: a widget set to All languages showed no text for reviews stored in another language.
+* Fixed: the bundled translations are used where the WordPress language pack misses a widget text.
+* Fixed hiding a review that is stored in more than one language.
 
 = 2.9 =
 * Reviews can now be connected in WordPress Playground.

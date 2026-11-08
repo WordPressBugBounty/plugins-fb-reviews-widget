@@ -12,10 +12,10 @@ msgstr ""
 "X-Generator: Poedit 3.0.1\n"
 
 msgid "Google Rating"
-msgstr "Valoración en google"
+msgstr "Valoración de Google"
 
 msgid "See All Reviews"
-msgstr "Ver todos los comentarios"
+msgstr "Ver todas las reseñas"
 
 msgid "Google User"
 msgstr "Usuario de Google"
@@ -24,10 +24,10 @@ msgid "read more"
 msgstr "leer más"
 
 msgid "More Reviews"
-msgstr "Siguientes"
+msgstr "Más reseñas"
 
 msgid "Based on %s reviews"
-msgstr "Basado en %s opiniones"
+msgstr "Basado en %s reseñas"
 
 msgid "Ready to review?"
-msgstr "¿Listo para revisar?"
+msgstr "¿Quieres dejar una reseña?"

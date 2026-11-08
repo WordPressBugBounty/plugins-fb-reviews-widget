@@ -17,7 +17,7 @@ use WP_TrustReviews\Includes\Core\Database;
 
 final class Plugin {
 
-    const VER = '2.9';
+    const VER = '2.9.1';
     const SLG = 'trustreviews';
     const PFX = self::SLG . '_';
     const NAME = 'fb-reviews-widget';
@@ -75,7 +75,7 @@ final class Plugin {
     }
 
     public function register_services() {
-        $this->init_language();
+        add_action('init', array($this, 'init_language'));
 
         $helper = new Helper();
 
@@ -174,7 +174,14 @@ final class Plugin {
     }
 
     public function init_language() {
-        load_plugin_textdomain(Plugin::NAME, false, basename(dirname(TRUSTREVIEWS_PLUGIN_FILE)) . '/languages');
+        $domain = Plugin::NAME;
+        $locale = determine_locale();
+        $dir = dirname(TRUSTREVIEWS_PLUGIN_FILE) . '/languages/' . $domain . '-';
+        $own = glob($dir . substr($locale, 0, 5) . '*.mo') ?: glob($dir . strtok($locale, '_') . '_*.mo');
+
+        // Loading our file stops WordPress from looking in wp-content/languages, so the file there is loaded here, first.
+        load_textdomain($domain, WP_LANG_DIR . '/plugins/' . $domain . '-' . $locale . '.mo', $locale);
+        if ($own) load_textdomain($domain, $own[0], $locale);
     }
 
     public function activate($network_wide = false) {

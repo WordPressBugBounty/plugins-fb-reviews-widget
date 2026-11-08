@@ -114,7 +114,7 @@ class Core {
         $bizs = [];
         $reviews = [];
 
-        foreach ($connection->connections as $conn) {
+        foreach ($this->places($connection->connections) as $conn) {
             switch ($conn->platform) {
                 case 'facebook':
                     $result = $this->get_fb_reviews($conn, $options);
@@ -133,7 +133,30 @@ class Core {
         return array('businesses' => $bizs, 'reviews' => $reviews, 'options' => $options);
     }
 
-    public function get_db_reviews($biz, $options, $is_admin = false) {
+    // A place connected in several languages is one place: its reviews come once, with the texts of the site language when it is
+    // among them, else of the first connection; the other languages fill the gaps. An empty language stands for all languages.
+    private function places($connections) {
+        $places = array();
+        foreach ($connections as $conn) {
+            $key = $conn->platform . '|' . $conn->id;
+            if (!isset($places[$key])) {
+                $places[$key] = clone $conn;
+                $places[$key]->langs = array();
+            }
+            $places[$key]->langs[] = empty($conn->lang) ? '' : $conn->lang;
+        }
+        $site = substr(get_locale(), 0, 2);
+        foreach ($places as $place) {
+            $place->all_langs = in_array('', $place->langs, true);
+            $langs = array_values(array_unique(array_map(function($l) use ($site) { return $l === '' ? $site : $l; }, $place->langs)));
+            $i = array_search($site, $langs, true);
+            if ($i > 0) array_unshift($langs, ...array_splice($langs, $i, 1));
+            $place->langs = $langs;
+        }
+        return array_values($places);
+    }
+
+    private function get_db_reviews($biz, $options, $is_admin = false) {
         global $wpdb;
 
         $rating = 0;
@@ -152,10 +175,9 @@ class Core {
             return array('reviews' => array());
         }
 
-        $lang = empty($biz->lang) ? substr(get_locale(), 0, 2) : $biz->lang;
-        $all_langs = isset($options->all_langs) ? (int)(bool)$options->all_langs : (empty($biz->lang) ? 1 : 0);
+        $all_langs = isset($options->all_langs) ? (int)(bool)$options->all_langs : (int) $biz->all_langs;
 
-        $revs = $this->fetch_reviews([$place->id], $options, $lang, $all_langs, 0, $is_admin);
+        $revs = $this->fetch_reviews([$place->id], $options, $biz->langs, $all_langs, 0, $is_admin);
 
         $place->photo = empty($biz->photo) ? (empty($place->photo) ? Plugin::G_BIZ_LOGO() : $place->photo) : $biz->photo;
 
@@ -221,19 +243,17 @@ class Core {
         return array('business' => $business, 'reviews' => $reviews);
     }
 
-    private function fetch_reviews($place_ids, $options, $lang, $all_langs, $limit, $is_admin) {
+    private function fetch_reviews($place_ids, $options, $langs, $all_langs, $limit, $is_admin) {
         global $wpdb;
 
-        $where_plain = $is_admin ? '' : " AND r2.hide = ''";
-        $where_r     = $is_admin ? '' : " AND r.hide = ''";
+        $where_r = $is_admin ? '' : " AND r.hide = ''";
 
         $hidden_ids = array();
         if (isset($options->hidden) && !$is_admin) {
             $hidden_ids = $this->parse_hidden_ids($options->hidden);
             if (!empty($hidden_ids)) {
-                $hidden_phs   = implode(',', array_fill(0, count($hidden_ids), '%d'));
-                $where_plain .= ' AND r2.id NOT IN (' . $hidden_phs . ')';
-                $where_r     .= ' AND r.id NOT IN (' . $hidden_phs . ')';
+                $hidden_phs = implode(',', array_fill(0, count($hidden_ids), '%d'));
+                $where_r   .= ' AND r.id NOT IN (' . $hidden_phs . ')';
             }
         }
 
@@ -242,20 +262,31 @@ class Core {
         }
         $place_ids_phs = implode(',', array_fill(0, count($place_ids), '%d'));
 
-        $lang_aliases = $this->get_lang_aliases($lang);
-        $lang_phs     = implode(',', array_fill(0, count($lang_aliases), '%s'));
+        // One text join per language in order of preference: the first text found is shown, the review's own language last.
+        $joins = array();
+        $texts = array();
+        $aliases = array();
+        foreach (array_values($langs) as $i => $l) {
+            $a = $this->get_lang_aliases($l);
+            $joins[] = "LEFT JOIN {$wpdb->prefix}" . Database::TEXT_TABLE . " tl{$i} ON tl{$i}.review_id = r.review_id AND tl{$i}.lang IN (" . implode(',', array_fill(0, count($a), '%s')) . ")";
+            $texts[] = "tl{$i}.text";
+            $aliases = array_merge($aliases, $a);
+        }
+        $lang_phs = implode(',', array_fill(0, count($aliases), '%s'));
+        $has_text = implode(' OR ', array_map(function($t) { return $t . ' IS NOT NULL'; }, $texts));
 
-        $sql = "SELECT r.*, t.text AS lang_text
+        $sql = "SELECT r.*, COALESCE(" . implode(', ', $texts) . ", t0.text) AS lang_text
                 FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r
-                LEFT JOIN {$wpdb->prefix}" . Database::TEXT_TABLE . " t
-                    ON t.review_id = r.review_id AND t.lang IN ({$lang_phs})
+                " . implode("\n                ", $joins) . "
+                LEFT JOIN {$wpdb->prefix}" . Database::TEXT_TABLE . " t0
+                    ON t0.review_id = r.review_id AND t0.lang = r.language
                 WHERE r.biz_id IN ({$place_ids_phs}){$where_r}
-                  AND (%d = 1 OR t.text IS NOT NULL OR r.language IN ({$lang_phs}) OR r.language IS NULL OR r.language = '')
+                  AND (%d = 1 OR {$has_text} OR r.language IN ({$lang_phs}) OR r.language IS NULL OR r.language = '')
                   AND (
                       r.author_url IS NULL OR r.author_url = ''
                       OR NOT EXISTS (
                           SELECT 1 FROM {$wpdb->prefix}" . Database::REVIEW_TABLE . " r2
-                          WHERE r2.biz_id = r.biz_id AND r2.author_url = r.author_url{$where_plain}
+                          WHERE r2.biz_id = r.biz_id AND r2.author_url = r.author_url
                             AND (r2.time > r.time OR (r2.time = r.time AND r2.id > r.id))
                       )
                   )
@@ -266,12 +297,11 @@ class Core {
         }
 
         $params = array_merge(
-            $lang_aliases,   // t.lang IN (...)      [LEFT JOIN]
+            $aliases,        // tl{i}.lang IN (...)  [LEFT JOINs]
             $place_ids,      // r.biz_id IN (...)
             $hidden_ids,     // {$where_r}
             [$all_langs],    // %d = 1
-            $lang_aliases,   // r.language IN (...)
-            $hidden_ids      // {$where_plain}       [NOT EXISTS]
+            $aliases         // r.language IN (...)
         );
 
         return $wpdb->get_results($wpdb->prepare($sql, $params));
