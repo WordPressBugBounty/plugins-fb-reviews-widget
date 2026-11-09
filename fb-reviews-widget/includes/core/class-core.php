@@ -6,6 +6,9 @@ use WP_TrustReviews\Includes\Plugin;
 
 class Core {
 
+    // The next query resets $wpdb->last_error, so fetch_reviews() keeps its failure here.
+    private $failed = false;
+
     public function __construct() {
     }
 
@@ -93,9 +96,12 @@ class Core {
                 default:
                     $expiration = 3600 * 24;
             }
+            $this->failed = false;
             $data = $this->get_data($connection, $is_admin);
-            set_transient($data_cache_key, $data, $expiration);
-            set_transient($connection_cache_key, $serialized_connection, $expiration);
+            if (!$this->failed) {
+                set_transient($data_cache_key, $data, $expiration);
+                set_transient($connection_cache_key, $serialized_connection, $expiration);
+            }
         }
         return $data;
     }
@@ -304,7 +310,9 @@ class Core {
             $aliases         // r.language IN (...)
         );
 
-        return $wpdb->get_results($wpdb->prepare($sql, $params));
+        $rows = $wpdb->get_results($wpdb->prepare($sql, $params));
+        if ($wpdb->last_error !== '') $this->failed = true;
+        return $rows;
     }
 
     private function get_lang_aliases($lang) {

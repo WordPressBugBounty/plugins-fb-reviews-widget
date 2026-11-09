@@ -4,7 +4,7 @@ Tags: reviews, google reviews, facebook reviews, tripadvisor reviews, yelp revie
 Requires PHP: 7.0
 Requires at least: 6.0
 Tested up to: 7.1
-Stable tag: 2.9.1
+Stable tag: 2.9.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -189,6 +189,9 @@ Only for “Read more”, slider and pagination.
 ---
 
 == Changelog ==
+
+= 2.9.2 =
+* Fixed: no reviews shown on sites where the plugin's review and text tables had different database collations; the update gives the text table the collation of the reviews table.
 
 = 2.9.1 =
 * Change: a place connected in several languages shows each review once, in the site language when the place is connected in it, otherwise in the first connection's language.
